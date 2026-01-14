@@ -84,6 +84,60 @@ class F1PhysicsEngine:
             ]
         }
     }
+
+    # Static coordinates for accurate visualization (Normalized 0-800, 0-600)
+    TRACK_COORDINATES = {
+        "monaco": [
+           {"x": 100, "y": 500}, {"x": 150, "y": 480}, {"x": 200, "y": 450}, # St Devote
+           {"x": 250, "y": 400}, {"x": 300, "y": 350}, {"x": 320, "y": 340}, # Massenet
+           {"x": 340, "y": 350}, {"x": 350, "y": 380}, # Casino
+           {"x": 360, "y": 420}, {"x": 350, "y": 450}, # Mirabeau
+           {"x": 340, "y": 460}, {"x": 330, "y": 450}, # Hairpin entry
+           {"x": 325, "y": 445}, {"x": 335, "y": 440}, # Hairpin exit
+           {"x": 360, "y": 450}, {"x": 380, "y": 460}, # Portier
+           {"x": 450, "y": 470}, {"x": 550, "y": 480}, # Tunnel
+           {"x": 580, "y": 485}, {"x": 570, "y": 470}, # Chicane
+           {"x": 560, "y": 460}, {"x": 500, "y": 450}, # Tabac
+           {"x": 480, "y": 440}, {"x": 460, "y": 430}, # Pool 1
+           {"x": 440, "y": 440}, {"x": 420, "y": 450}, # Pool 2
+           {"x": 300, "y": 450}, {"x": 250, "y": 480}, # Rascasse
+           {"x": 200, "y": 500}, {"x": 100, "y": 500}  # Finish
+        ],
+        "silverstone": [
+            {"x": 350, "y": 500}, {"x": 450, "y": 500}, # Hamilton Straight
+            {"x": 500, "y": 480}, {"x": 520, "y": 460}, # Abbey
+            {"x": 500, "y": 430}, {"x": 480, "y": 440}, # Village
+            {"x": 460, "y": 460}, {"x": 440, "y": 450}, # Loop
+            {"x": 430, "y": 420}, {"x": 450, "y": 380}, # Wellington
+            {"x": 440, "y": 350}, {"x": 410, "y": 340}, # Brooklands
+            {"x": 380, "y": 350}, {"x": 360, "y": 360}, # Luffield
+            {"x": 350, "y": 340}, {"x": 360, "y": 300}, # Woodcote
+            {"x": 400, "y": 280}, {"x": 450, "y": 260}, # Copse
+            {"x": 500, "y": 250}, {"x": 520, "y": 270}, # Maggots
+            {"x": 540, "y": 280}, {"x": 560, "y": 260}, # Becketts
+            {"x": 580, "y": 250}, {"x": 590, "y": 270}, # Chapel
+            {"x": 600, "y": 400}, {"x": 600, "y": 450}, # Hangar Straight
+            {"x": 580, "y": 480}, {"x": 550, "y": 480}, # Stowe
+            {"x": 500, "y": 490}, {"x": 450, "y": 495}, # Vale
+            {"x": 400, "y": 500}, {"x": 350, "y": 500}  # Club
+        ],
+        "spa": [
+            {"x": 200, "y": 400}, {"x": 180, "y": 420}, # La Source
+            {"x": 170, "y": 450}, {"x": 200, "y": 500}, # Eau Rouge Appr
+            {"x": 220, "y": 520}, {"x": 240, "y": 510}, # Raidillon
+            {"x": 300, "y": 450}, {"x": 400, "y": 400}, # Kemmel
+            {"x": 450, "y": 380}, {"x": 470, "y": 390}, # Les Combes
+            {"x": 480, "y": 410}, {"x": 460, "y": 440}, # Malmedy
+            {"x": 440, "y": 480}, {"x": 420, "y": 500}, # Bruxelles
+            {"x": 380, "y": 500}, # No Name
+            {"x": 340, "y": 480}, {"x": 320, "y": 460}, # Pouhon
+            {"x": 350, "y": 430}, {"x": 370, "y": 410}, # Fagnes
+            {"x": 400, "y": 400}, # Stavelot
+            {"x": 500, "y": 380}, {"x": 600, "y": 350}, # Blanchimont
+            {"x": 620, "y": 340}, {"x": 600, "y": 320}, # Bus Stop
+            {"x": 250, "y": 380}, {"x": 200, "y": 400}  # Finish
+        ]
+    }
     
     # Tire Compounds
     TIRE_DATA = {
@@ -398,7 +452,14 @@ class F1PhysicsEngine:
     
     @classmethod
     def generate_track_layout(cls, track_id):
-        """Generate 2D coordinates for track visualization using explicit turn directions."""
+        """
+        Generate 2D coordinates for track visualization.
+        Now uses manually curated high-quality static data for templates.
+        """
+        if track_id in cls.TRACK_COORDINATES:
+            return cls.TRACK_COORDINATES[track_id]
+            
+        # Fallback to procedural generation for custom tracks (if any)
         if track_id not in cls.TRACK_TEMPLATES:
             return []
             
@@ -410,31 +471,19 @@ class F1PhysicsEngine:
         angle = 0  # 0 is East
         points.append({"x": x, "y": y})
         
-        scale = 0.5 # Scale down for visualization
+        scale = 0.5 
         
         for segment in segments:
             length = segment["length"] * scale
             radius = segment["radius"] * scale
             
             if radius == 0:
-                # Straight
                 x += length * np.cos(angle)
                 y += length * np.sin(angle)
                 points.append({"x": x, "y": y})
             else:
-                # Corner
                 arc_length = length
-                turn_angle = arc_length / radius # radians
-                
-                # Use explicit direction if available, else alternating default
-                # 1 = Right (Clockwise), -1 = Left (Counter-Clockwise) note: y increases downwards in HTML5 canvas usually,
-                # but standard trig y increases upwards. Canvas: y+ is down. 
-                # Angle 0 is Right (East). 
-                # Right turn -> Angle increases in standard math? No, Right turn -> Angle increases (clockwise) in Canvas coords (+y is down)
-                # Let's assume standard trig: x = cos, y = sin. Right turn decreases angle.
-                # BUT for screen coords where y is down: Right turn = Clockwise = Angle Increases.
-                
-                # From segment data: "dir": 1 (Right), -1 (Left)
+                turn_angle = arc_length / radius 
                 turn_direction = segment.get("dir", 1) 
                 
                 steps = 10
@@ -447,28 +496,7 @@ class F1PhysicsEngine:
                     y += step_len * np.sin(angle)
                     points.append({"x": x, "y": y})
                     
-        # Normalize coordinates to fit in 800x600 canvas
-        xs = [p["x"] for p in points]
-        ys = [p["y"] for p in points]
-        
-        min_x, max_x = min(xs), max(xs)
-        min_y, max_y = min(ys), max(ys)
-        
-        width = max_x - min_x
-        height = max_y - min_y
-        
-        # Safer bounds
-        if width == 0: width = 1
-        if height == 0: height = 1
-        
-        scale_x = 700 / width
-        scale_y = 500 / height
-        final_scale = min(scale_x, scale_y) * 0.8
-        
-        offset_x = 400 - (min_x + width/2) * final_scale
-        offset_y = 300 - (min_y + height/2) * final_scale
-        
-        return [{"x": p["x"] * final_scale + offset_x, "y": p["y"] * final_scale + offset_y} for p in points]
+        return points
 
     @classmethod
     def get_track_templates(cls):

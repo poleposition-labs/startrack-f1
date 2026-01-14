@@ -82,10 +82,114 @@ class F1PhysicsEngine:
                 {"id": "bus_stop_2", "type": "corner", "length": 40, "radius": 30, "dir": -1},
                 {"id": "start_finish", "type": "straight", "length": 300, "radius": 0}
             ]
+        },
+        "bahrain": {
+            "name": "Bahrain GP",
+            "length_km": 5.412,
+            "segments": [{"id": "main", "type": "straight", "length": 350, "radius": 0}]
+        },
+        "australia": {
+            "name": "Australian GP",
+            "length_km": 5.278,
+            "segments": [{"id": "main", "type": "straight", "length": 300, "radius": 0}]
+        },
+        "japan": {
+            "name": "Japanese GP (Suzuka)",
+            "length_km": 5.807,
+            "segments": [{"id": "main", "type": "straight", "length": 400, "radius": 0}]
+        },
+        "china": {
+            "name": "Chinese GP",
+            "length_km": 5.451,
+            "segments": [{"id": "main", "type": "straight", "length": 350, "radius": 0}]
+        },
+        "miami": {
+            "name": "Miami GP",
+            "length_km": 5.412,
+            "segments": [{"id": "main", "type": "straight", "length": 350, "radius": 0}]
+        },
+        "imola": {
+            "name": "Emilia Romagna GP (Imola)",
+            "length_km": 4.909,
+        },
+        "saudi_arabia": {
+            "name": "Saudi Arabian GP (Jeddah)",
+            "length_km": 6.174,
+            "segments": [{"id": "main", "type": "straight", "length": 400, "radius": 0}]
+        },
+        "azerbaijan": {
+            "name": "Azerbaijan GP (Baku)",
+            "length_km": 6.003,
+            "segments": [{"id": "main", "type": "straight", "length": 350, "radius": 0}]
+        },
+        "spain": {
+            "name": "Spanish GP (Barcelona)",
+            "length_km": 4.675,
+            "segments": [{"id": "main", "type": "straight", "length": 300, "radius": 0}]
+        },
+        "canada": {
+            "name": "Canadian GP (Montreal)",
+            "length_km": 4.361,
+            "segments": [{"id": "main", "type": "straight", "length": 275, "radius": 0}]
+        },
+        "austria": {
+            "name": "Austrian GP (Red Bull Ring)",
+            "length_km": 4.318,
+            "segments": [{"id": "main", "type": "straight", "length": 350, "radius": 0}]
+        },
+        "hungary": {
+            "name": "Hungarian GP (Hungaroring)",
+            "length_km": 4.381,
+            "segments": [{"id": "main", "type": "straight", "length": 250, "radius": 0}]
+        },
+        "netherlands": {
+            "name": "Dutch GP (Zandvoort)",
+            "length_km": 4.259,
+            "segments": [{"id": "main", "type": "straight", "length": 280, "radius": 0}]
+        },
+        "italy": {
+            "name": "Italian GP (Monza)",
+            "length_km": 5.793,
+            "segments": [{"id": "main", "type": "straight", "length": 400, "radius": 0}]
+        },
+        "singapore": {
+            "name": "Singapore GP (Marina Bay)",
+            "length_km": 4.940,
+            "segments": [{"id": "main", "type": "straight", "length": 300, "radius": 0}]
+        },
+        "usa": {
+            "name": "United States GP (COTA)",
+            "length_km": 5.513,
+            "segments": [{"id": "main", "type": "straight", "length": 350, "radius": 0}]
+        },
+        "mexico": {
+            "name": "Mexico City GP",
+            "length_km": 4.304,
+            "segments": [{"id": "main", "type": "straight", "length": 300, "radius": 0}]
+        },
+        "brazil": {
+            "name": "Brazilian GP (Interlagos)",
+            "length_km": 4.309,
+            "segments": [{"id": "main", "type": "straight", "length": 280, "radius": 0}]
+        },
+        "las_vegas": {
+            "name": "Las Vegas GP",
+            "length_km": 6.120,
+            "segments": [{"id": "main", "type": "straight", "length": 400, "radius": 0}]
+        },
+        "qatar": {
+            "name": "Qatar GP (Losail)",
+            "length_km": 5.380,
+            "segments": [{"id": "main", "type": "straight", "length": 350, "radius": 0}]
+        },
+        "abu_dhabi": {
+            "name": "Abu Dhabi GP (Yas Marina)",
+            "length_km": 5.281,
+            "segments": [{"id": "main", "type": "straight", "length": 325, "radius": 0}]
         }
     }
 
-    # Static coordinates for accurate visualization (Normalized 0-800, 0-600)
+    # Static coordinates for accurate visualization with Lat/Lon
     TRACK_COORDINATES = {
         "monaco": [
            {"lat": 43.7347, "lng": 7.4206}, # Start/Finish
@@ -104,39 +208,295 @@ class F1PhysicsEngine:
            {"lat": 43.7340, "lng": 7.4220}, # Rascasse
            {"lat": 43.7347, "lng": 7.4206}  # Finish
         ],
-        "silverstone": [
-            {"x": 350, "y": 500}, {"x": 450, "y": 500}, # Hamilton Straight
-            {"x": 500, "y": 480}, {"x": 520, "y": 460}, # Abbey
-            {"x": 500, "y": 430}, {"x": 480, "y": 440}, # Village
-            {"x": 460, "y": 460}, {"x": 440, "y": 450}, # Loop
-            {"x": 430, "y": 420}, {"x": 450, "y": 380}, # Wellington
-            {"x": 440, "y": 350}, {"x": 410, "y": 340}, # Brooklands
-            {"x": 380, "y": 350}, {"x": 360, "y": 360}, # Luffield
-            {"x": 350, "y": 340}, {"x": 360, "y": 300}, # Woodcote
-            {"x": 400, "y": 280}, {"x": 450, "y": 260}, # Copse
-            {"x": 500, "y": 250}, {"x": 520, "y": 270}, # Maggots
-            {"x": 540, "y": 280}, {"x": 560, "y": 260}, # Becketts
-            {"x": 580, "y": 250}, {"x": 590, "y": 270}, # Chapel
-            {"x": 600, "y": 400}, {"x": 600, "y": 450}, # Hangar Straight
-            {"x": 580, "y": 480}, {"x": 550, "y": 480}, # Stowe
-            {"x": 500, "y": 490}, {"x": 450, "y": 495}, # Vale
-            {"x": 400, "y": 500}, {"x": 350, "y": 500}  # Club
+        "bahrain": [
+           {"lat": 26.0325, "lng": 50.5106}, # Start/Finish
+           {"lat": 26.0315, "lng": 50.5120}, # Turn 1
+           {"lat": 26.0305, "lng": 50.5130}, # Turn 2
+           {"lat": 26.0295, "lng": 50.5140}, # Turn 3
+           {"lat": 26.0285, "lng": 50.5145}, # Turn 4
+           {"lat": 26.0270, "lng": 50.5140}, # Turns 5-6
+           {"lat": 26.0260, "lng": 50.5135},
+           {"lat": 26.0250, "lng": 50.5140}, # Turn 8
+           {"lat": 26.0240, "lng": 50.5150}, # Turn 9-10
+           {"lat": 26.0245, "lng": 50.5165}, # Turn 11
+           {"lat": 26.0260, "lng": 50.5175}, # Turn 13
+           {"lat": 26.0280, "lng": 50.5165}, # Turn 14
+           {"lat": 26.0305, "lng": 50.5140}, # Turn 15
+           {"lat": 26.0325, "lng": 50.5106}  # Finish
+        ],
+        "australia": [
+           {"lat": -37.8497, "lng": 144.9680}, # Start/Finish
+           {"lat": -37.8505, "lng": 144.9685}, # Turn 1
+           {"lat": -37.8510, "lng": 144.9690}, # Turn 2
+           {"lat": -37.8515, "lng": 144.9695}, # Turn 3
+           {"lat": -37.8520, "lng": 144.9710}, # Turn 4-5-6
+           {"lat": -37.8525, "lng": 144.9720},
+           {"lat": -37.8530, "lng": 144.9715}, # Turn 9-10
+           {"lat": -37.8525, "lng": 144.9705}, # Turn 11-12
+           {"lat": -37.8515, "lng": 144.9690}, # Turn 13
+           {"lat": -37.8505, "lng": 144.9675}, # Turn 14-15
+           {"lat": -37.8497, "lng": 144.9680}  # Finish
+        ],
+        "japan": [
+           {"lat": 34.8431, "lng": 136.5407}, # Start/Finish (Suzuka)
+           {"lat": 34.8425, "lng": 136.5415}, # Turn 1
+           {"lat": 34.8420, "lng": 136.5425}, # Turn 2 (S-Curves)
+           {"lat": 34.8415, "lng": 136.5435},
+           {"lat": 34.8410, "lng": 136.5445}, # Dunlop Curve
+           {"lat": 34.8405, "lng": 136.5455}, # Degner
+           {"lat": 34.8400, "lng": 136.5465}, # Hairpin
+           {"lat": 34.8405, "lng": 136.5475}, # Spoon Curve
+           {"lat": 34.8415, "lng": 136.5470},
+           {"lat": 34.8425, "lng": 136.5460}, # 130R
+           {"lat": 34.8430, "lng": 136.5440}, # Casio Triangle
+           {"lat": 34.8431, "lng": 136.5407}  # Finish
+        ],
+        "china": [
+           {"lat": 31.3389, "lng": 121.2200}, # Start/Finish (Shanghai)
+           {"lat": 31.3395, "lng": 121.2210}, # Turn 1
+           {"lat": 31.3400, "lng": 121.2220}, # Turn 2-3
+           {"lat": 31.3405, "lng": 121.2230},
+           {"lat": 31.3410, "lng": 121.2240}, # Turns 6-7
+           {"lat": 31.3405, "lng": 121.2250}, # Turn 8
+           {"lat": 31.3395, "lng": 121.2255}, # Turn 11
+           {"lat": 31.3385, "lng": 121.2245}, # Turn 13
+           {"lat": 31.3380, "lng": 121.2230}, # Turn 14
+           {"lat": 31.3385, "lng": 121.2215}, # Turn 16
+           {"lat": 31.3389, "lng": 121.2200}  # Finish
+        ],
+        "miami": [
+           {"lat": 25.9581, "lng": -80.2389}, # Start/Finish
+           {"lat": 25.9585, "lng": -80.2395}, # Turn 1
+           {"lat": 25.9590, "lng": -80.2400}, # Turns 2-3
+           {"lat": 25.9595, "lng": -80.2405},
+           {"lat": 25.9600, "lng": -80.2395}, # Turn 11 (DRS 1)
+           {"lat": 25.9595, "lng": -80.2385}, # Turn 13-14
+           {"lat": 25.9590, "lng": -80.2380}, # Turn 16
+           {"lat": 25.9585, "lng": -80.2385}, # Turn 17
+           {"lat": 25.9581, "lng": -80.2389}  # Finish
+        ],
+        "imola": [
+           {"lat": 44.3439, "lng": 11.7167}, # Start/Finish
+           {"lat": 44.3445, "lng": 11.7175}, # Tamburello
+           {"lat": 44.3450, "lng": 11.7185}, # Villeneuve
+           {"lat": 44.3455, "lng": 11.7195}, # Tosa
+           {"lat": 44.3460, "lng": 11.7205}, # Piratella
+           {"lat": 44.3465, "lng": 11.7215}, # Acque Minerali
+           {"lat": 44.3460, "lng": 11.7225}, # Variante Alta
+           {"lat": 44.3450, "lng": 11.7220}, # Rivazza
+           {"lat": 44.3445, "lng": 11.7200},
+           {"lat": 44.3439, "lng": 11.7167}  # Finish
         ],
         "spa": [
-            {"x": 200, "y": 400}, {"x": 180, "y": 420}, # La Source
-            {"x": 170, "y": 450}, {"x": 200, "y": 500}, # Eau Rouge Appr
-            {"x": 220, "y": 520}, {"x": 240, "y": 510}, # Raidillon
-            {"x": 300, "y": 450}, {"x": 400, "y": 400}, # Kemmel
-            {"x": 450, "y": 380}, {"x": 470, "y": 390}, # Les Combes
-            {"x": 480, "y": 410}, {"x": 460, "y": 440}, # Malmedy
-            {"x": 440, "y": 480}, {"x": 420, "y": 500}, # Bruxelles
-            {"x": 380, "y": 500}, # No Name
-            {"x": 340, "y": 480}, {"x": 320, "y": 460}, # Pouhon
-            {"x": 350, "y": 430}, {"x": 370, "y": 410}, # Fagnes
-            {"x": 400, "y": 400}, # Stavelot
-            {"x": 500, "y": 380}, {"x": 600, "y": 350}, # Blanchimont
-            {"x": 620, "y": 340}, {"x": 600, "y": 320}, # Bus Stop
-            {"x": 250, "y": 380}, {"x": 200, "y": 400}  # Finish
+           {"lat": 50.4372, "lng": 5.9714}, # Start/Finish
+           {"lat": 50.4365, "lng": 5.9725}, # La Source
+           {"lat": 50.4355, "lng": 5.9745}, # Eau Rouge
+           {"lat": 50.4350, "lng": 5.9765}, # Raidillon
+           {"lat": 50.4345, "lng": 5.9800}, # Kemmel Straight
+           {"lat": 50.4340, "lng": 5.9830}, # Les Combes
+           {"lat": 50.4335, "lng": 5.9850}, # Malmedy
+           {"lat": 50.4325, "lng": 5.9860}, # Pouhon
+           {"lat": 50.4315, "lng": 5.9855}, # Fagnes
+           {"lat": 50.4310, "lng": 5.9840}, # Stavelot
+           {"lat": 50.4320, "lng": 5.9815}, # Blanchimont
+           {"lat": 50.4335, "lng": 5.9785}, # Bus Stop
+           {"lat": 50.4350, "lng": 5.9750},
+           {"lat": 50.4372, "lng": 5.9714}  # Finish
+        ],
+        "silverstone": [
+           {"lat": 52.0786, "lng": -1.0169}, # Start/Finish
+           {"lat": 52.0780, "lng": -1.0180}, # Abbey
+           {"lat": 52.0775, "lng": -1.0190}, # Farm
+           {"lat": 52.0770, "lng": -1.0195}, # Village
+           {"lat": 52.0765, "lng": -1.0200}, # The Loop
+           {"lat": 52.0760, "lng": -1.0205}, # Aintree
+           {"lat": 52.0755, "lng": -1.0210}, # Brooklands
+           {"lat": 52.0753, "lng": -1.0215}, # Luffield
+           {"lat": 52.0755, "lng": -1.0205}, # Woodcote
+           {"lat": 52.0760, "lng": -1.0195}, # Copse
+           {"lat": 52.0770, "lng": -1.0185}, # Maggots-Becketts-Chapel
+           {"lat": 52.0780, "lng": -1.0175},
+           {"lat": 52.0785, "lng": -1.0170}, # Stowe
+           {"lat": 52.0786, "lng": -1.0169}  # Finish
+        ],
+        "saudi_arabia": [
+           {"lat": 21.6319, "lng": 39.1044}, # Start/Finish (Jeddah)
+           {"lat": 21.6325, "lng": 39.1050}, # Turn 1
+           {"lat": 21.6330, "lng": 39.1055}, # Turn 2-3
+           {"lat": 21.6340, "lng": 39.1065}, # Turn 4
+           {"lat": 21.6350, "lng": 39.1075}, # Turn 10
+           {"lat": 21.6355, "lng": 39.1085}, # Turn 13
+           {"lat": 21.6350, "lng": 39.1095}, # Turn 22
+           {"lat": 21.6340, "lng": 39.1085}, # Turn 24
+           {"lat": 21.6330, "lng": 39.1070}, # Turn 26
+           {"lat": 21.6319, "lng": 39.1044}  # Finish
+        ],
+        "azerbaijan": [
+           {"lat": 40.3725, "lng": 49.8533}, # Start/Finish (Baku)
+           {"lat": 40.3730, "lng": 49.8540}, # Turn 1
+           {"lat": 40.3735, "lng": 49.8545}, # Turn 2
+           {"lat": 40.3740, "lng": 49.8550}, # Turn 3
+           {"lat": 40.3750, "lng": 49.8560}, # Turn 7
+           {"lat": 40.3755, "lng": 49.8570}, # Turn 12
+           {"lat": 40.3750, "lng": 49.8580}, # Turn 15
+           {"lat": 40.3740, "lng": 49.8575}, # Turn 16 (Castle)
+           {"lat": 40.3730, "lng": 49.8560}, # Turn 18
+           {"lat": 40.3725, "lng": 49.8545}, # Turn 20
+           {"lat": 40.3725, "lng": 49.8533}  # Finish
+        ],
+        "spain": [
+           {"lat": 41.5700, "lng": 2.2611}, # Start/Finish (Barcelona)
+           {"lat": 41.5705, "lng": 2.2620}, # Turn 1 (Elf)
+           {"lat": 41.5710, "lng": 2.2630}, # Turn 3 (Renault)
+           {"lat": 41.5715, "lng": 2.2640}, # Turn 5
+           {"lat": 41.5720, "lng": 2.2650}, # Turn 7
+           {"lat": 41.5725, "lng": 2.2655}, # Turn 9 (Campsa)
+           {"lat": 41.5720, "lng": 2.2645}, # Turn 10 (La Caixa)
+           {"lat": 41.5710, "lng": 2.2635}, # Turn 12
+           {"lat": 41.5705, "lng": 2.2625}, # Turn 14
+           {"lat": 41.5700, "lng": 2.2611}  # Finish
+        ],
+        "canada": [
+           {"lat": 45.5050, "lng": -73.5267}, # Start/Finish (Montreal)
+           {"lat": 45.5055, "lng": -73.5275}, # Turn 1 (Senna)
+           {"lat": 45.5060, "lng": -73.5285}, # Turn 2
+           {"lat": 45.5065, "lng": -73.5295}, # Turn 3-4
+           {"lat": 45.5070, "lng": -73.5305}, # Turn 6
+           {"lat": 45.5075, "lng": -73.5310}, # Turn 8 (Hairpin)
+           {"lat": 45.5070, "lng": -73.5300}, # Turn 10
+           {"lat": 45.5060, "lng": -73.5285}, # Turn 13 (Wall of Champions)
+           {"lat": 45.5055, "lng": -73.5275}, # Turn 14
+           {"lat": 45.5050, "lng": -73.5267}  # Finish
+        ],
+        "austria": [
+           {"lat": 47.2197, "lng": 14.7647}, # Start/Finish (Red Bull Ring)
+           {"lat": 47.2200, "lng": 14.7655}, # Turn 1
+           {"lat": 47.2205, "lng": 14.7665}, # Turn 2
+           {"lat": 47.2210, "lng": 14.7670}, # Turn 3
+           {"lat": 47.2215, "lng": 14.7665}, # Turn 4
+           {"lat": 47.2210, "lng": 14.7655}, # Turn 6
+           {"lat": 47.2205, "lng": 14.7650}, # Turn 8
+           {"lat": 47.2200, "lng": 14.7645}, # Turn 9
+           {"lat": 47.2197, "lng": 14.7647}  # Finish
+        ],
+        "hungary": [
+           {"lat": 47.5789, "lng": 19.2486}, # Start/Finish (Hungaroring)
+           {"lat": 47.5795, "lng": 19.2495}, # Turn 1
+           {"lat": 47.5800, "lng": 19.2505}, # Turn 2
+           {"lat": 47.5805, "lng": 19.2515}, # Turn 4
+           {"lat": 47.5810, "lng": 19.2520}, # Turn 6
+           {"lat": 47.5815, "lng": 19.2515}, # Turn 8
+           {"lat": 47.5810, "lng": 19.2505}, # Turn 11
+           {"lat": 47.5800, "lng": 19.2495}, # Turn 13
+           {"lat": 47.5795, "lng": 19.2490}, # Turn 14
+           {"lat": 47.5789, "lng": 19.2486}  # Finish
+        ],
+        "netherlands": [
+           {"lat": 52.3888, "lng": 4.5409}, # Start/Finish (Zandvoort)
+           {"lat": 52.3893, "lng": 4.5415}, # Turn 1 (Tarzan)
+           {"lat": 52.3898, "lng": 4.5425}, # Turn 3 (Hugenholtz)
+           {"lat": 52.3905, "lng": 4.5435}, # Turn 7
+           {"lat": 52.3910, "lng": 4.5445}, # Turn 9
+           {"lat": 52.3905, "lng": 4.5455}, # Turn 11 (Banked)
+           {"lat": 52.3900, "lng": 4.5445}, # Turn 13
+           {"lat": 52.3893, "lng": 4.5425}, # Turn 14
+           {"lat": 52.3888, "lng": 4.5409}  # Finish
+        ],
+        "italy": [
+           {"lat": 45.6206, "lng": 9.2811}, # Start/Finish (Monza)
+           {"lat": 45.6210, "lng": 9.2820}, # Turn 1 (Rettifilo)
+           {"lat": 45.6215, "lng": 9.2830}, # Turn 3
+           {"lat": 45.6220, "lng": 9.2840}, # Lesmo 1
+           {"lat": 45.6225, "lng": 9.2850}, # Lesmo 2
+           {"lat": 45.6230, "lng": 9.2860}, # Ascari
+           {"lat": 45.6235, "lng": 9.2855}, # Parabolica
+           {"lat": 45.6225, "lng": 9.2835},
+           {"lat": 45.6215, "lng": 9.2820},
+           {"lat": 45.6206, "lng": 9.2811}  # Finish
+        ],
+        "singapore": [
+           {"lat": 1.2914, "lng": 103.8644}, # Start/Finish (Marina Bay)
+           {"lat": 1.2920, "lng": 103.8650}, # Turn 1
+           {"lat": 1.2925, "lng": 103.8655}, # Turn 3
+           {"lat": 1.2930, "lng": 103.8665}, # Turn 5
+           {"lat": 1.2935, "lng": 103.8675}, # Turn 7
+           {"lat": 1.2940, "lng": 103.8680}, # Turn 10
+           {"lat": 1.2935, "lng": 103.8670}, # Turn 13
+           {"lat": 1.2925, "lng": 103.8660}, # Turn 16
+           {"lat": 1.2920, "lng": 103.8650}, # Turn 19
+           {"lat": 1.2914, "lng": 103.8644}  # Finish
+        ],
+        "usa": [
+           {"lat": 30.1328, "lng": -97.6411}, # Start/Finish (COTA)
+           {"lat": 30.1335, "lng": -97.6420}, # Turn 1
+           {"lat": 30.1345, "lng": -97.6430}, # Turn 3-6 (Esses)
+           {"lat": 30.1355, "lng": -97.6440},
+           {"lat": 30.1360, "lng": -97.6450}, # Turn 11 (Hairpin)
+           {"lat": 30.1355, "lng": -97.6455}, # Turn 12
+           {"lat": 30.1345, "lng": -97.6445}, # Turn 15
+           {"lat": 30.1335, "lng": -97.6430}, # Turn 18
+           {"lat": 30.1328, "lng": -97.6420}, # Turn 20
+           {"lat": 30.1328, "lng": -97.6411}  # Finish
+        ],
+        "mexico": [
+           {"lat": 19.4042, "lng": -99.0907}, # Start/Finish (Mexico City)
+           {"lat": 19.4048, "lng": -99.0915}, # Turn 1
+           {"lat": 19.4055, "lng": -99.0925}, # Turn 3
+           {"lat": 19.4060, "lng": -99.0935}, # Turn 4 (Esses)
+           {"lat": 19.4065, "lng": -99.0945}, # Turn 8
+           {"lat": 19.4070, "lng": -99.0950}, # Turn 11
+           {"lat": 19.4065, "lng": -99.0940}, # Turn 12 (Peraltada)
+           {"lat": 19.4055, "lng": -99.0925}, # Turn 15
+           {"lat": 19.4048, "lng": -99.0915}, # Turn 17
+           {"lat": 19.4042, "lng": -99.0907}  # Finish
+        ],
+        "brazil": [
+           {"lat": -23.7036, "lng": -46.6997}, # Start/Finish (Interlagos)
+           {"lat": -23.7040, "lng": -46.7005}, # Turn 1 (Senna S)
+           {"lat": -23.7045, "lng": -46.7015}, # Turn 2
+           {"lat": -23.7050, "lng": -46.7020}, # Turn 4 (Descida do Lago)
+           {"lat": -23.7055, "lng": -46.7025}, # Turn 6
+           {"lat": -23.7060, "lng": -46.7020}, # Turn 8 (Laranjinha)
+           {"lat": -23.7055, "lng": -46.7010}, # Turn 10
+           {"lat": -23.7045, "lng": -46.7000}, # Turn 12 (Juncao)
+           {"lat": -23.7040, "lng": -46.6995}, # Turn 14
+           {"lat": -23.7036, "lng": -46.6997}  # Finish
+        ],
+        "las_vegas": [
+           {"lat": 36.1162, "lng": -115.1745}, # Start/Finish (Las Vegas Strip)
+           {"lat": 36.1168, "lng": -115.1750}, # Turn 1
+           {"lat": 36.1175, "lng": -115.1760}, # Turn 3
+           {"lat": 36.1180, "lng": -115.1770}, # Turn 5
+           {"lat": 36.1185, "lng": -115.1780}, # Turn 7
+           {"lat": 36.1190, "lng": -115.1785}, # Turn 9
+           {"lat": 36.1185, "lng": -115.1775}, # Turn 12
+           {"lat": 36.1175, "lng": -115.1765}, # Turn 14
+           {"lat": 36.1168, "lng": -115.1755}, # Turn 16
+           {"lat": 36.1162, "lng": -115.1745}  # Finish
+        ],
+        "qatar": [
+           {"lat": 25.4900, "lng": 51.4542}, # Start/Finish (Losail)
+           {"lat": 25.4905, "lng": 51.4550}, # Turn 1
+           {"lat": 25.4910, "lng": 51.4560}, # Turn 2
+           {"lat": 25.4915, "lng": 51.4570}, # Turn 4
+           {"lat": 25.4920, "lng": 51.4580}, # Turn 6
+           {"lat": 25.4925, "lng": 51.4585}, # Turn 10
+           {"lat": 25.4920, "lng": 51.4575}, # Turn 12
+           {"lat": 25.4910, "lng": 51.4560}, # Turn 14
+           {"lat": 25.4905, "lng": 51.4550}, # Turn 15
+           {"lat": 25.4900, "lng": 51.4542}  # Finish
+        ],
+        "abu_dhabi": [
+           {"lat": 24.4672, "lng": 54.6031}, # Start/Finish (Yas Marina)
+           {"lat": 24.4678, "lng": 54.6040}, # Turn 1
+           {"lat": 24.4685, "lng": 54.6050}, # Turn 3
+           {"lat": 24.4690, "lng": 54.6060}, # Turn 5-6
+           {"lat": 24.4695, "lng": 54.6070}, # Turn 8
+           {"lat": 24.4700, "lng": 54.6075}, # Turn 11
+           {"lat": 24.4695, "lng": 54.6065}, # Turn 13
+           {"lat": 24.4685, "lng": 54.6050}, # Turn 17
+           {"lat": 24.4678, "lng": 54.6040}, # Turn 19
+           {"lat": 24.4672, "lng": 54.6031}  # Finish
         ]
     }
     

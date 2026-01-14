@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import CircuitEditor from './components/CircuitEditor'
 import Dashboard from './components/Dashboard'
 import { GeometryEngine } from './utils/GeometryEngine'
@@ -22,6 +22,8 @@ function App() {
   // Track Templates
   const [trackTemplates, setTrackTemplates] = useState([])
   const [selectedTemplate, setSelectedTemplate] = useState('')
+  const [filterRegion, setFilterRegion] = useState('All')
+  const [isRealMode, setIsRealMode] = useState(false)
   
   const [showRacingLine, setShowRacingLine] = useState(false)
   const [ghostProgress, setGhostProgress] = useState(undefined)
@@ -59,7 +61,7 @@ function App() {
     fetch('http://localhost:8000/api/v1/tracks')
       .then(res => res.json())
       .then(data => setTrackTemplates(data))
-      .catch(err => console.log('Backend not available'));
+      .catch(() => console.log('Backend not available'));
   }, []);
 
   // Check if circuit is closed (adaptive for Meters or Lat/Lon)
@@ -99,7 +101,7 @@ function App() {
       engineOscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
       engineOscillator.start();
-    } catch (e) {
+    } catch {
       console.log('Audio not supported');
     }
   }, [audioEnabled]);
@@ -446,6 +448,7 @@ function App() {
       setCircuitName(trackTemplates.find(t => t.id === trackId)?.name || trackId);
       setIsCircuitComplete(true);
       setSelectedTemplate(trackId);
+      setIsRealMode(true);
     } catch (err) {
       console.error(err);
     }
@@ -479,7 +482,7 @@ function App() {
           setCircuitName(data.name || 'Imported Track');
           setIsCircuitComplete(checkCircuitComplete(data.points));
         }
-      } catch (err) {
+      } catch {
         alert('Invalid JSON file');
       }
     };
@@ -573,17 +576,53 @@ function App() {
             </div>
             
             {/* Track Templates */}
-            {trackTemplates.length > 0 && (
               <div className="control-group">
-                <label>Load Template</label>
-                <select value={selectedTemplate} onChange={(e) => loadTemplate(e.target.value)}>
-                  <option value="">Select template...</option>
-                  {trackTemplates.map(t => (
-                    <option key={t.id} value={t.id}>{t.name} ({t.length_km}km)</option>
+                <label>Filter Tracks</label>
+                <div className="join-buttons">
+                  {['All', 'Europe', 'Americas', 'Asia', 'Middle East'].map(r => (
+                    <button 
+                      key={r}
+                      className={`btn-xs ${filterRegion === r ? 'active' : ''}`}
+                      onClick={() => setFilterRegion(r)}
+                    >
+                      {r === 'All' ? 'World' : r}
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
-            )}
+
+              {trackTemplates.length > 0 && (
+                <div className="control-group">
+                  <label>Load Track ({filterRegion})</label>
+                  <select value={selectedTemplate} onChange={(e) => loadTemplate(e.target.value)}>
+                    <option value="">Select track...</option>
+                    {trackTemplates
+                      .filter(t => {
+                        if (filterRegion === 'All') return true;
+                        // Basic region mapping based on ID or name
+                        const id = t.id;
+                        if (filterRegion === 'Europe' && ['monaco','silverstone','spa','monza','imola','spain','zandvoort','hungary','austria'].includes(id)) return true;
+                        if (filterRegion === 'Americas' && ['miami','canada','usa','mexico','brazil','las_vegas'].includes(id)) return true;
+                        if (filterRegion === 'Asia' && ['japan','china','singapore','australia','azerbaijan'].includes(id)) return true; // Australia/Baku often grouped here for F1 simplified regions
+                        if (filterRegion === 'Middle East' && ['bahrain','saudi_arabia','qatar','abu_dhabi'].includes(id)) return true;
+                        return false;
+                      })
+                      .map(t => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                  </select>
+                </div>
+              )}
+              
+              {isRealMode && (
+                 <div className="info-box success">
+                    🔒 <strong>Real Circuit Mode</strong>
+                    <p className="text-xs mt-1 opacity-80">Track geometry is locked to real-world coordinates.</p>
+                    <button className="btn-xs mt-2 w-full" onClick={() => { setIsRealMode(false); setCircuitPoints([]); setSelectedTemplate(''); }}>
+                       Unlock / Clear
+                    </button>
+                 </div>
+              )}
             
             <div className="button-row">
               <button 
@@ -742,6 +781,7 @@ function App() {
                 isSimulating={isSimulating}
                 showRacingLine={showRacingLine}
                 ghostProgress={ghostProgress}
+                isRealMode={isRealMode}
               />
               
               <div className={`circuit-status ${isCircuitComplete ? 'complete' : ''}`}>

@@ -1,0 +1,11 @@
+{
+    "name": "startrack-f1-root",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "dev": "npm run dev --prefix frontend",
+        "build": "npm run build --prefix frontend",
+        "start:backend": "cd backend && uvicorn main:app --reload",
+        "setup": "npm install --prefix frontend && cd backend && pip install -r requirements.txt"
+    }
+}

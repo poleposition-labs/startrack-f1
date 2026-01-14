@@ -1,14 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 
-// Check if circuit loop is closed
-const isLoopClosed = (pts) => {
-  if (pts.length < 3) return false;
-  const first = pts[0];
-  const last = pts[pts.length - 1];
-  const dist = Math.hypot(first.x - last.x, first.y - last.y);
-  return dist < 30;
-}
-
 // Generate smooth spline points with Catmull-Rom interpolation
 const getSplinePoints = (points, segments = 20, closed = false) => {
   if (points.length < 2) return points.map(p => ({...p, speed: 1.0}));
@@ -180,9 +171,8 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
         ctx.stroke();
         ctx.restore();
 
-        // Draw racing line with speed colors
+        // Draw optimal racing line visual helper (yellow dashed)
         if (showRacingLine) {
-          // Draw Optimal Line (Apexes) visual helper
           ctx.save();
           ctx.strokeStyle = 'rgba(255, 235, 59, 0.6)'; // Yellow line
           ctx.lineWidth = 4;
@@ -191,11 +181,10 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
           ctx.shadowColor = '#ffee58';
           
           ctx.beginPath();
-          // Simplified optimal line: shift points inwards at corners based on turn direction
-          // This is a visual approximation for the user
+          // Visual approximation: shift points inwards at corners
           for (let i = 0; i < smoothPoints.length; i++) {
              const p = smoothPoints[i];
-             // Simple shift for visual effect (improve later with real physics data if needed)
+             // Simple shift for visual effect based on index
              const shift = (Math.sin(i * 0.1) * TRACK_WIDTH * 0.3); 
              if (i===0) ctx.moveTo(p.x + shift, p.y + shift);
              else ctx.lineTo(p.x + shift, p.y + shift);
@@ -205,7 +194,7 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
           ctx.restore();
         }
 
-        // Standard speed line (always visible)
+        // Draw standard speed line (always visible)
         for (let i = 1; i < smoothPoints.length; i++) {
           const p1 = smoothPoints[i-1];
           const p2 = smoothPoints[i];
@@ -257,7 +246,6 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
       const x2 = startPoint.x - Math.cos(perpAngle) * lineLength / 2;
       const y2 = startPoint.y - Math.sin(perpAngle) * lineLength / 2;
       
-      // Checkered pattern effect
       ctx.save();
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 4;
@@ -272,6 +260,9 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
 
     // Draw Control Points
     points.forEach((p, i) => {
+      // Don't draw control points during simulation for cleaner look
+      if (isSimulating || ghostProgress !== undefined) return;
+      
       const isHovered = hoveredPoint === i || draggingPoint === i;
       const isStart = i === 0;
       const isEnd = i === points.length - 1;
@@ -308,8 +299,8 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
       ctx.fill();
     });
 
-    // Draw Race Car during simulation
-    if (carPosition && isSimulating) {
+    // Draw Race Car
+    if (carPosition) {
       ctx.save();
       ctx.translate(carPosition.x, carPosition.y);
       ctx.rotate(carPosition.angle || 0);
@@ -319,7 +310,6 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
       ctx.shadowColor = '#e53935';
       ctx.fillStyle = '#e53935';
       
-      // Simple F1 car shape
       ctx.beginPath();
       ctx.moveTo(15, 0);
       ctx.lineTo(-10, -6);
@@ -344,9 +334,33 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
       
       ctx.restore();
     }
+    
+    // Draw Ghost Car
+    if (ghostPosition) {
+      ctx.save();
+      ctx.translate(ghostPosition.x, ghostPosition.y);
+      ctx.rotate(ghostPosition.angle || 0);
+      ctx.globalAlpha = 0.5;
+      
+      // Ghost body (Cyan)
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = '#00e5ff';
+      ctx.fillStyle = '#00e5ff';
+      
+      ctx.beginPath();
+      ctx.moveTo(15, 0);
+      ctx.lineTo(-10, -6);
+      ctx.lineTo(-12, -4);
+      ctx.lineTo(-12, 4);
+      ctx.lineTo(-10, 6);
+      ctx.closePath();
+      ctx.fill();
+      
+      ctx.restore();
+    }
 
     // Draw hint to close circuit
-    if (points.length >= 3 && !isComplete) {
+    if (points.length >= 3 && !isComplete && !isSimulating) {
       const first = points[0];
       const last = points[points.length - 1];
       const dist = Math.hypot(first.x - last.x, first.y - last.y);
@@ -364,7 +378,7 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
       }
     }
     
-  }, [points, hoveredPoint, draggingPoint, isComplete, carPosition, ghostPosition, isSimulating, showRacingLine]);
+  }, [points, hoveredPoint, draggingPoint, isComplete, carPosition, ghostPosition, isSimulating, showRacingLine, ghostProgress]);
 
   useEffect(() => {
     draw();
@@ -383,7 +397,7 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
   }
 
   const handleMouseDown = (e) => {
-    if (isSimulating) return;
+    if (isSimulating || ghostProgress !== undefined) return;
     
     const {x, y} = getMousePos(e)
     const hitIndex = points.findIndex(p => Math.hypot(p.x - x, p.y - y) < 15);
@@ -427,7 +441,7 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
       style={{ 
         width: '100%', 
         height: '100%', 
-        cursor: isSimulating ? 'default' : (draggingPoint !== null ? 'grabbing' : 'crosshair'), 
+        cursor: (isSimulating || ghostProgress !== undefined) ? 'default' : (draggingPoint !== null ? 'grabbing' : 'crosshair'), 
         display: 'block' 
       }}
     />

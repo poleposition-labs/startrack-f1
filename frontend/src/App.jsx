@@ -22,6 +22,9 @@ function App() {
   const [trackTemplates, setTrackTemplates] = useState([])
   const [selectedTemplate, setSelectedTemplate] = useState('')
   
+  const [showRacingLine, setShowRacingLine] = useState(false)
+  const [ghostProgress, setGhostProgress] = useState(undefined)
+  
   // Strategy Settings
   const [totalLaps, setTotalLaps] = useState(5)
   const [startingTire, setStartingTire] = useState('soft')
@@ -205,6 +208,7 @@ function App() {
 
     setIsSimulating(true);
     setRaceProgress(0);
+    setGhostProgress(undefined);
     setCurrentLap(1);
     startEngineSound();
 
@@ -269,6 +273,11 @@ function App() {
   const runComparison = async () => {
     if (!isCircuitComplete) return;
     
+    // Setup Ghost Car Mode
+    setShowComparison(true);
+    setIsSimulating(true); // To lock canvas
+    setActiveTab('editor'); // Force editor view
+    
     const segments = buildSegments();
     
     const payload = {
@@ -296,9 +305,61 @@ function App() {
       });
       const data = await res.json();
       setComparisonResults(data);
-      setShowComparison(true);
+      
+      // Animate Comparison (Ghost Race)
+      // We will normalize progress based on total time of slower car to keep them in sync on timeline
+      const lapsA = data.strategy_a.laps;
+      const lapsB = data.strategy_b.laps;
+      const maxDuration = Math.max(data.strategy_a.total_time, data.strategy_b.total_time);
+      
+      // Use a fixed time step for smooth animation
+      const dt = 0.1; // 100ms simulation steps
+      let currentTime = 0;
+      
+      playPitRadio("Drivers ready... Lights out!");
+      
+      while (currentTime < maxDuration) {
+        currentTime += dt * 4; // 4x speed
+        await new Promise(r => setTimeout(r, 40)); 
+        
+        // Calculate progress for Car A (Red/Real)
+        let progA = 0;
+        const currentLapA = lapsA.find(l => l.cumulative_time > currentTime) || lapsA[lapsA.length-1];
+        if (currentLapA) {
+             const lapStartTime = currentLapA.cumulative_time - currentLapA.lap_time;
+             const timeInLap = Math.max(0, currentTime - lapStartTime);
+             // Approximate within lap (0-1)
+             const lapProg = Math.min(1, timeInLap / currentLapA.lap_time);
+             // Approximate within race (0-100)
+             progA = ((currentLapA.lap_number - 1 + lapProg) / totalLaps) * 100;
+        } else {
+             progA = 100; // Finished
+        }
+        
+        // Calculate progress for Car B (Ghost/Cyan)
+        let progB = 0;
+        const currentLapB = lapsB.find(l => l.cumulative_time > currentTime) || lapsB[lapsB.length-1];
+        if (currentLapB) {
+             const lapStartTime = currentLapB.cumulative_time - currentLapB.lap_time;
+             const timeInLap = Math.max(0, currentTime - lapStartTime);
+             const lapProg = Math.min(1, timeInLap / currentLapB.lap_time);
+             progB = ((currentLapB.lap_number - 1 + lapProg) / totalLaps) * 100;
+        } else {
+             progB = 100;
+        }
+
+        setRaceProgress(Math.min(100, progA));
+        setGhostProgress(Math.min(100, progB));
+      }
+      
+      setGhostProgress(undefined);
+      setIsSimulating(false);
+      setActiveTab('strategy'); // Go to results
+      
     } catch (err) {
       console.error(err);
+      setIsSimulating(false);
+      setGhostProgress(undefined);
     }
   };
 
@@ -326,18 +387,31 @@ function App() {
     try {
       const res = await fetch(`http://localhost:8000/api/v1/tracks/${trackId}`);
       const data = await res.json();
-      // Convert segments to points (simplified)
-      const points = [];
-      let x = 200, y = 200;
-      data.segments.forEach((seg, i) => {
-        const angle = (i / data.segments.length) * Math.PI * 2;
-        x += Math.cos(angle) * (seg.length / 10);
-        y += Math.sin(angle) * (seg.length / 10);
-        points.push({ x: Math.min(800, Math.max(50, x)), y: Math.min(500, Math.max(50, y)) });
-      });
-      // Close the loop
-      points.push({ ...points[0] });
-      setCircuitPoints(points);
+      // Use preview_points from backend if available for realistic layout
+      if (data.segments) {
+        // Fetch full template data (we need to get the template list again to access preview_points efficiently
+        // or just rely on what we have. The /tracks/{id} endpoint should ideally return points
+        // Let's refetch the list to get preview_points since /tracks/{id} returns segments
+        const listRes = await fetch('http://localhost:8000/api/v1/tracks');
+        const listData = await listRes.json();
+        const template = listData.find(t => t.id === trackId);
+        
+        if (template && template.preview_points) {
+           setCircuitPoints(template.preview_points);
+        } else {
+           // Fallback to circle
+            const points = [];
+            let x = 200, y = 200;
+            data.segments.forEach((seg, i) => {
+              const angle = (i / data.segments.length) * Math.PI * 2;
+              x += Math.cos(angle) * (seg.length / 10);
+              y += Math.sin(angle) * (seg.length / 10);
+              points.push({ x: Math.min(800, Math.max(50, x)), y: Math.min(500, Math.max(50, y)) });
+            });
+            points.push({ ...points[0] });
+            setCircuitPoints(points);
+        }
+      }
       setCircuitName(trackTemplates.find(t => t.id === trackId)?.name || trackId);
       setIsCircuitComplete(true);
       setSelectedTemplate(trackId);
@@ -479,6 +553,16 @@ function App() {
                 </select>
               </div>
             )}
+            
+            <div className="button-row">
+              <button 
+                onClick={() => setShowRacingLine(!showRacingLine)} 
+                className={`btn-secondary ${showRacingLine ? 'active' : ''}`}
+                title="Toggle Optimal Racing Line"
+              >
+                {showRacingLine ? '🚫 Hide Line' : '⚡ Show Line'}
+              </button>
+            </div>
             
             <div className="button-row">
               <button onClick={saveCircuit} className="btn-secondary">💾 Save</button>
@@ -625,6 +709,8 @@ function App() {
                 isComplete={isCircuitComplete}
                 raceProgress={raceProgress}
                 isSimulating={isSimulating}
+                showRacingLine={showRacingLine}
+                ghostProgress={ghostProgress}
               />
               
               <div className={`circuit-status ${isCircuitComplete ? 'complete' : ''}`}>
@@ -707,7 +793,12 @@ function App() {
           )}
           
           {activeTab === 'analysis' && (
-            <Dashboard data={simulationResults} formatTime={formatTime} />
+            <div className="analysis-view">
+              <div className="print-controls" style={{ textAlign: 'right', marginBottom: '1rem' }}>
+                <button onClick={() => window.print()} className="btn-secondary">🖨️ Print Report / Save PDF</button>
+              </div>
+              <Dashboard data={simulationResults} formatTime={formatTime} />
+            </div>
           )}
           
           {activeTab === 'leaderboard' && (

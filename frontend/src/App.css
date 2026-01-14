@@ -378,3 +378,36 @@ input[type="range"]::-moz-range-thumb {
     display: none;
   }
 }
+
+/* Print Styles */
+@media print {
+  header, .sidebar, .header-nav, .header-actions, .button-row, .print-controls {
+    display: none !important;
+  }
+  
+  .app-container {
+    height: auto;
+    overflow: visible;
+  }
+  
+  main {
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+  
+  .canvas-area {
+    height: auto;
+    overflow: visible;
+  }
+  
+  .dashboard-container {
+    padding: 0;
+    gap: 1rem;
+  }
+  
+  .chart-panel, .metric-card {
+    border: 1px solid #333;
+    break-inside: avoid;
+  }
+}

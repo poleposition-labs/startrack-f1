@@ -1,8 +1,6 @@
 # <div align="center">StarTrack F1</div>
 
 <div align="center">
-  <img src="frontend/public/vite.svg" alt="StarTrack Logo" width="100"/>
-  <br/>
   <h3>Advanced Motorsport Analytics & Circuit Design Engine</h3>
   <p>An open-source, physics-driven Formula 1 simulation platform for track design, strategy modeling, and telemetry analysis.</p>
 
@@ -92,15 +90,6 @@ Visualize performance data just like the race engineers on the pit wall.
 
 ---
 
-## 🛣️ Roadmap
-
-- [x] **Phase 1**: Visual Overhaul (Glassmorphism UI)
-- [x] **Phase 2**: Advanced Circuit Editor (Splines, Snap-to-Grid)
-- [x] **Phase 3**: Physics V2 (ERS, Tire Model, Acceleration)
-- [x] **Phase 4**: Persistence & Strategy Controls
-- [ ] **Phase 5**: 3D Visualization & Multiplayer Lobbies
-
----
 
 ## 🤝 Contributing
 

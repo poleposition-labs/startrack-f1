@@ -1,68 +1,180 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+  --bg-primary: #050510; /* Deeper black */
+  --bg-secondary: rgba(20, 20, 35, 0.6); /* Translucent */
+  --bg-panel: rgba(30, 30, 50, 0.4); /* Translucent Glass */
+  
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0b0;
+  --text-accent: #00f0ff; /* Neon Cyan */
+  
+  --accent-red: #ff3b3b;
+  --accent-purple: #bd00ff;
+  --accent-green: #00ff88;
+  
+  --font-main: 'Inter', system-ui, sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  
+  --border-color: rgba(255, 255, 255, 0.1);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+  --neon-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
 }
 
 body {
   margin: 0;
+  padding: 0;
+  background-color: var(--bg-primary);
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(189, 0, 255, 0.1) 0%, transparent 20%),
+    radial-gradient(circle at 90% 80%, rgba(0, 240, 255, 0.1) 0%, transparent 20%);
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
   display: flex;
-  place-items: center;
-  min-width: 320px;
+  flex-direction: column;
   min-height: 100vh;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+header {
+  height: 60px;
+  background: rgba(10, 10, 20, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: var(--glass-border);
+  display: flex;
+  align-items: center;
+  padding: 0 2rem;
+  justify-content: space-between;
+  z-index: 10;
+}
+
+header h1 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, var(--text-accent), var(--accent-purple));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 5px rgba(0, 240, 255, 0.5));
+}
+
+main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 0; /* Remove gap, handle transparency overlap if needed */
+  overflow: hidden;
+  position: relative;
+}
+
+.sidebar {
+  background: var(--bg-secondary);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  padding: 1.5rem;
+  overflow-y: auto;
+  border-right: var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.canvas-area {
+  background: transparent;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  /* subtle grid pattern handled in component, or here */
+  background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.panel {
+  background: var(--bg-panel);
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: var(--glass-border);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.panel h3 {
+  margin-top: 0;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  color: var(--text-primary);
+  border-bottom: 2px solid rgba(0,240,255,0.2);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  color: var(--text-accent);
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  font-family: var(--font-main);
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+button:hover {
+  background: var(--text-accent);
+  color: #000;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+select {
+  background: rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border-radius: 6px;
+  font-family: var(--font-main);
+  cursor: pointer;
+  outline: none;
+}
+
+select:focus {
+  border-color: var(--text-accent) !important;
+  box-shadow: 0 0 5px rgba(0, 240, 255, 0.3);
+}
+
+footer {
+  padding: 1rem;
+  background: rgba(10, 10, 20, 0.9);
+  backdrop-filter: blur(10px);
+  border-top: var(--glass-border);
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  position: relative;
+  z-index: 10;
+}
+
+.disclaimer {
+  color: var(--text-secondary);
+  font-style: italic;
+  opacity: 0.6;
+  max-width: 800px;
+  margin: 0 auto;
 }

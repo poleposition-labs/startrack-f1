@@ -80,6 +80,8 @@ This project uses strictly open data, synthetic datasets, and physics-based mode
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
+Check out our [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) to see the roadmap for taking this project to the next level (UI/UX overhaul, 3D, and more).
+
 ## 📜 License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for more information.

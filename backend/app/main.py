@@ -31,3 +31,6 @@ def read_root():
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
+
+from app.api import simulation
+app.include_router(simulation.router, prefix="/api/v1")

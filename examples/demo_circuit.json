@@ -1,0 +1,39 @@
+{
+    "name": "Demo Grand Prix",
+    "location": "Synthetic Island",
+    "segments": [
+        {
+            "id": "s1",
+            "type": "straight",
+            "length": 800
+        },
+        {
+            "id": "c1",
+            "type": "corner",
+            "length": 200,
+            "radius": 50
+        },
+        {
+            "id": "s2",
+            "type": "straight",
+            "length": 400
+        },
+        {
+            "id": "c2",
+            "type": "corner",
+            "length": 300,
+            "radius": 100
+        },
+        {
+            "id": "s3",
+            "type": "straight",
+            "length": 1000
+        },
+        {
+            "id": "c3",
+            "type": "corner",
+            "length": 150,
+            "radius": 30
+        }
+    ]
+}

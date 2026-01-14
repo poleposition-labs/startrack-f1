@@ -14,6 +14,7 @@ class Circuit(BaseModel):
 class SimulationRequest(BaseModel):
     circuit: Circuit
     tire_compound: str = "soft"
+    weather: str = "dry"
     laps: int = 1
 
 class LapResult(BaseModel):

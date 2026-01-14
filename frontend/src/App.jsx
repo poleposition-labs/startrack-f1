@@ -10,6 +10,7 @@ function App() {
   const [savedCircuits, setSavedCircuits] = useState(() => {
     const saved = JSON.parse(localStorage.getItem('startrack_circuits') || '{}');
     return Object.keys(saved);
+  });
   // State for Strategy
   const [tireCompound, setTireCompound] = useState('soft')
   const [weather, setWeather] = useState('dry')
@@ -86,6 +87,26 @@ function App() {
           alert("Simulation failed. Is backend running?")
       }
   }
+
+  const saveCircuit = () => {
+    if (circuitPoints.length < 3) {
+      alert("Please draw at least 3 points before saving!");
+      return;
+    }
+    const circuits = JSON.parse(localStorage.getItem('startrack_circuits') || '{}');
+    circuits[circuitName] = circuitPoints;
+    localStorage.setItem('startrack_circuits', JSON.stringify(circuits));
+    setSavedCircuits(Object.keys(circuits));
+    alert(`Circuit "${circuitName}" saved!`);
+  };
+
+  const loadCircuit = (name) => {
+    const circuits = JSON.parse(localStorage.getItem('startrack_circuits') || '{}');
+    if (circuits[name]) {
+      setCircuitPoints(circuits[name]);
+      setCircuitName(name);
+    }
+  };
 
   return (
     <div className="app-container">

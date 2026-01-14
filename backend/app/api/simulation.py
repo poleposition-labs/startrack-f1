@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from typing import List
 from app.models import SimulationRequest, LapResult
 from app.simulation.physics import F1PhysicsEngine
 
@@ -12,7 +13,7 @@ async def simulate_race(request: SimulationRequest):
     segments_dict = [s.model_dump() for s in request.circuit.segments]
     
     for i in range(request.laps):
-        time, telemetry = physics.simulate_lap(segments_dict, request.tire_compound)
+        time, telemetry = physics.simulate_lap(segments_dict, request.tire_compound, request.weather)
         results.append(LapResult(
             lap_number=i+1,
             lap_time=time,

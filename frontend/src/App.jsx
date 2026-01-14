@@ -6,6 +6,28 @@ function App() {
   const [activeTab, setActiveTab] = useState('editor')
   const [simulationResults, setSimulationResults] = useState(null)
   const [circuitPoints, setCircuitPoints] = useState([])
+  const [circuitName, setCircuitName] = useState("My Track")
+  const [savedCircuits, setSavedCircuits] = useState(() => {
+    const saved = JSON.parse(localStorage.getItem('startrack_circuits') || '{}');
+    return Object.keys(saved);
+  })
+
+  const saveCircuit = () => {
+      if(!circuitName) return;
+      const saved = JSON.parse(localStorage.getItem('startrack_circuits') || '{}');
+      saved[circuitName] = circuitPoints;
+      localStorage.setItem('startrack_circuits', JSON.stringify(saved));
+      setSavedCircuits(Object.keys(saved));
+      alert(`Circuit "${circuitName}" saved!`);
+  }
+
+  const loadCircuit = (name) => {
+      const saved = JSON.parse(localStorage.getItem('startrack_circuits') || '{}');
+      if (saved[name]) {
+          setCircuitPoints(saved[name]);
+          setCircuitName(name);
+      }
+  }
 
   const runSimulation = async () => {
       // Create segments from points
@@ -36,6 +58,7 @@ function App() {
                 segments: segments.map(s => ({...s, length: s.length * 5})) // Scale
             },
             tire_compound: document.getElementById('tireSelect')?.value || 'soft',
+            weather: document.getElementById('weatherSelect')?.value || 'dry',
             laps: 1
       }
 
@@ -71,6 +94,50 @@ function App() {
       <main>
         <div className="sidebar">
           <div className="panel">
+                <h3>Circuit Management</h3>
+                <div style={{display:'flex', flexDirection:'column', gap:'0.5rem'}}>
+                    <input 
+                        type="text" 
+                        value={circuitName} 
+                        onChange={(e)=>setCircuitName(e.target.value)}
+                        placeholder="Circuit Name"
+                        style={{
+                            background: 'rgba(0,0,0,0.3)', 
+                            border: '1px solid var(--border-color)', 
+                            padding:'0.5rem', 
+                            color:'white', 
+                            borderRadius:'4px'
+                        }}
+                    />
+                    <button onClick={saveCircuit} style={{width:'100%'}}>💾 Save Track</button>
+                    
+                    {savedCircuits.length > 0 && (
+                        <div style={{marginTop:'0.5rem'}}>
+                            <small style={{color:'var(--text-secondary)'}}>Load:</small>
+                            <select 
+                                onChange={(e) => loadCircuit(e.target.value)} 
+                                style={{
+                                    width:'100%', 
+                                    padding:'0.5rem', 
+                                    marginTop:'0.2rem',
+                                    background: 'rgba(0,0,0,0.3)',
+                                    color:'var(--text-primary)',
+                                    border:'1px solid var(--border-color)'
+                                }}
+                                defaultValue=""
+                            >
+                                <option value="" disabled>Select a track...</option>
+                                {savedCircuits.map(name => (
+                                    <option key={name} value={name}>{name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+                    <button onClick={() => setCircuitPoints([])} style={{background: 'rgba(255, 59, 59, 0.2)', color:'#ff3b3b', borderColor:'#ff3b3b', marginTop:'0.5rem'}}>🗑 Clear</button>
+                </div>
+            </div>
+
+          <div className="panel">
             <h3>Configuration</h3>
             <p>Design your circuit and run simulations.</p>
             <br/>
@@ -80,6 +147,15 @@ function App() {
                     <option value="soft">Soft C5</option>
                     <option value="medium">Medium C3</option>
                     <option value="hard">Hard C1</option>
+                </select>
+            </div>
+
+            <div className="control-group" style={{marginTop:'1rem'}}>
+                <label>Weather Conditions (Strategy)</label>
+                <select id="weatherSelect" style={{width: '100%', padding: '0.5rem', background: '#0a0a0f', color: 'white', border: '1px solid #2a2a40'}}>
+                    <option value="dry">Dry (Optimal)</option>
+                    <option value="hot">Hot (High Deg)</option>
+                    <option value="rain">Rain (Low Grip)</option>
                 </select>
             </div>
             <br/>

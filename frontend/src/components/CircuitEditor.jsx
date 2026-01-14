@@ -81,28 +81,36 @@ const getSplinePoints = (points, segments = 20, closed = false) => {
   return splinePoints;
 }
 
-const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulating }) => {
+const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulating, showRacingLine, ghostProgress }) => {
   const canvasRef = useRef(null)
   const [draggingPoint, setDraggingPoint] = useState(null)
   const [hoveredPoint, setHoveredPoint] = useState(null)
   const [carPosition, setCarPosition] = useState(null)
+  const [ghostPosition, setGhostPosition] = useState(null)
   const smoothPointsRef = useRef([])
 
   const SNAP_GRID = 24;
   const TRACK_WIDTH = 28;
 
-  // Update car position during simulation
+  // Update car positions during simulation
   useEffect(() => {
-    if (isSimulating && smoothPointsRef.current.length > 0) {
-      const index = Math.floor((raceProgress / 100) * (smoothPointsRef.current.length - 1));
-      const point = smoothPointsRef.current[Math.min(index, smoothPointsRef.current.length - 1)];
-      if (point) {
-        setCarPosition(point);
+    if ((isSimulating || ghostProgress !== undefined) && smoothPointsRef.current.length > 0) {
+      if (isSimulating) {
+        const index = Math.floor((raceProgress / 100) * (smoothPointsRef.current.length - 1));
+        const point = smoothPointsRef.current[Math.min(index, smoothPointsRef.current.length - 1)];
+        if (point) setCarPosition(point);
       }
-    } else if (!isSimulating) {
+      
+      if (ghostProgress !== undefined) {
+        const index = Math.floor((ghostProgress / 100) * (smoothPointsRef.current.length - 1));
+        const point = smoothPointsRef.current[Math.min(index, smoothPointsRef.current.length - 1)];
+        if (point) setGhostPosition(point);
+      }
+    } else if (!isSimulating && ghostProgress === undefined) {
       setCarPosition(null);
+      setGhostPosition(null);
     }
-  }, [raceProgress, isSimulating]);
+  }, [raceProgress, isSimulating, ghostProgress]);
 
   // Drawing function
   const draw = useCallback(() => {
@@ -173,6 +181,31 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
         ctx.restore();
 
         // Draw racing line with speed colors
+        if (showRacingLine) {
+          // Draw Optimal Line (Apexes) visual helper
+          ctx.save();
+          ctx.strokeStyle = 'rgba(255, 235, 59, 0.6)'; // Yellow line
+          ctx.lineWidth = 4;
+          ctx.setLineDash([10, 10]);
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = '#ffee58';
+          
+          ctx.beginPath();
+          // Simplified optimal line: shift points inwards at corners based on turn direction
+          // This is a visual approximation for the user
+          for (let i = 0; i < smoothPoints.length; i++) {
+             const p = smoothPoints[i];
+             // Simple shift for visual effect (improve later with real physics data if needed)
+             const shift = (Math.sin(i * 0.1) * TRACK_WIDTH * 0.3); 
+             if (i===0) ctx.moveTo(p.x + shift, p.y + shift);
+             else ctx.lineTo(p.x + shift, p.y + shift);
+          }
+          if (closed) ctx.closePath();
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // Standard speed line (always visible)
         for (let i = 1; i < smoothPoints.length; i++) {
           const p1 = smoothPoints[i-1];
           const p2 = smoothPoints[i];
@@ -331,7 +364,7 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
       }
     }
     
-  }, [points, hoveredPoint, draggingPoint, isComplete, carPosition, isSimulating]);
+  }, [points, hoveredPoint, draggingPoint, isComplete, carPosition, ghostPosition, isSimulating, showRacingLine]);
 
   useEffect(() => {
     draw();

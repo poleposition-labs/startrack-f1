@@ -1,11 +1,61 @@
 import numpy as np
+import math
 
 class F1PhysicsEngine:
     """
     Advanced Physics Engine for StarTrack F1.
     Simulates vehicle dynamics, lap times, tire wear, ERS, fuel, and pit stops.
     """
-    
+
+    @classmethod
+    def initialize_track_data(cls):
+        """
+        Auto-populates segment data and preview points from TRACK_COORDINATES
+        for tracks that have placeholders.
+        """
+        for track_id, template in cls.TRACK_TEMPLATES.items():
+            # Check if we have coordinates for this track
+            if track_id in cls.TRACK_COORDINATES:
+                coords = cls.TRACK_COORDINATES[track_id]
+                
+                # 1. Inject preview_points for Frontend Map
+                template['preview_points'] = coords
+                
+                # 2. Generate Segments if currently a placeholder
+                # (Placeholder defined as having <= 1 segment)
+                if len(template.get('segments', [])) <= 1:
+                    new_segments = []
+                    loop_coords = coords if coords[0] == coords[-1] else coords + [coords[0]]
+                    
+                    for i in range(len(loop_coords) - 1):
+                        p1 = loop_coords[i]
+                        p2 = loop_coords[i+1]
+                        
+                        # Calculate distance (Haversine)
+                        R = 6371000
+                        phi1, phi2 = math.radians(p1['lat']), math.radians(p2['lat'])
+                        dphi = math.radians(p2['lat'] - p1['lat'])
+                        dlambda = math.radians(p2['lng'] - p1['lng'])
+                        a = math.sin(dphi/2)**2 + math.cos(phi1)*math.cos(phi2) * math.sin(dlambda/2)**2
+                        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+                        dist = R * c
+                        
+                        # Heuristic for Corner vs Straight
+                        # If segment is short (< 200m), assume corner for physics grip
+                        # If long (> 200m), assume straight
+                        is_corner = dist < 200
+                        
+                        new_segments.append({
+                            "id": f"{track_id}_s{i}",
+                            "type": "corner" if is_corner else "straight",
+                            "length": float(dist),
+                            "radius": float(dist / 2) if is_corner else 0
+                        })
+                    
+                    template['segments'] = new_segments
+                    # Recalculate total length
+                    template['length_km'] = sum(s['length'] for s in new_segments) / 1000.0
+
     # Track Templates with Realistic Segments
     # dir: 1 = Right, -1 = Left (for corners)
     TRACK_TEMPLATES = {
@@ -877,3 +927,7 @@ class F1PhysicsEngine:
         if track_id in cls.TRACK_TEMPLATES:
             return cls.TRACK_TEMPLATES[track_id]["segments"]
         return []
+
+
+# Initialize track segments from coordinates on module load
+F1PhysicsEngine.initialize_track_data()

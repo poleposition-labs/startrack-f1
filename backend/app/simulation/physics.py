@@ -6,48 +6,81 @@ class F1PhysicsEngine:
     Simulates vehicle dynamics, lap times, tire wear, ERS, fuel, and pit stops.
     """
     
-    # Track Templates
+    # Track Templates with Realistic Segments
+    # dir: 1 = Right, -1 = Left (for corners)
     TRACK_TEMPLATES = {
         "monaco": {
             "name": "Monaco GP",
             "length_km": 3.337,
             "segments": [
-                {"id": "s1", "type": "straight", "length": 500, "radius": 0},
-                {"id": "s2", "type": "corner", "length": 80, "radius": 40},
-                {"id": "s3", "type": "straight", "length": 300, "radius": 0},
-                {"id": "s4", "type": "corner", "length": 120, "radius": 25},
-                {"id": "s5", "type": "straight", "length": 200, "radius": 0},
-                {"id": "s6", "type": "corner", "length": 100, "radius": 60},
-                {"id": "s7", "type": "straight", "length": 400, "radius": 0},
-                {"id": "s8", "type": "corner", "length": 90, "radius": 35},
-                {"id": "s9", "type": "straight", "length": 350, "radius": 0},
-                {"id": "s10", "type": "corner", "length": 110, "radius": 50},
+                {"id": "main_straight", "type": "straight", "length": 250, "radius": 0},
+                {"id": "sainte_devote", "type": "corner", "length": 50, "radius": 30, "dir": 1},
+                {"id": "beau_rivage", "type": "straight", "length": 350, "radius": 0},
+                {"id": "massenet", "type": "corner", "length": 120, "radius": 80, "dir": -1},
+                {"id": "casino", "type": "corner", "length": 80, "radius": 60, "dir": 1},
+                {"id": "mirabeau_haute", "type": "corner", "length": 40, "radius": 20, "dir": 1},
+                {"id": "hairpin", "type": "corner", "length": 50, "radius": 15, "dir": -1}, # Grand Hotel
+                {"id": "mirabeau_bas", "type": "corner", "length": 60, "radius": 25, "dir": 1},
+                {"id": "portier", "type": "corner", "length": 50, "radius": 30, "dir": 1},
+                {"id": "tunnel", "type": "straight", "length": 450, "radius": 0},
+                {"id": "nouvelle_chicane_1", "type": "corner", "length": 20, "radius": 20, "dir": -1},
+                {"id": "nouvelle_chicane_2", "type": "corner", "length": 20, "radius": 20, "dir": 1},
+                {"id": "tabac", "type": "corner", "length": 80, "radius": 70, "dir": -1},
+                {"id": "pool_1", "type": "corner", "length": 60, "radius": 90, "dir": -1},
+                {"id": "pool_2", "type": "corner", "length": 60, "radius": 90, "dir": 1},
+                {"id": "rascasse", "type": "corner", "length": 40, "radius": 18, "dir": 1},
+                {"id": "antony_noghes", "type": "corner", "length": 40, "radius": 25, "dir": 1},
+                {"id": "finish_straight", "type": "straight", "length": 150, "radius": 0}
             ]
         },
         "silverstone": {
             "name": "Silverstone GP",
             "length_km": 5.891,
             "segments": [
-                {"id": "s1", "type": "straight", "length": 800, "radius": 0},
-                {"id": "s2", "type": "corner", "length": 200, "radius": 120},
-                {"id": "s3", "type": "straight", "length": 600, "radius": 0},
-                {"id": "s4", "type": "corner", "length": 150, "radius": 80},
-                {"id": "s5", "type": "straight", "length": 500, "radius": 0},
-                {"id": "s6", "type": "corner", "length": 180, "radius": 100},
-                {"id": "s7", "type": "straight", "length": 700, "radius": 0},
-                {"id": "s8", "type": "corner", "length": 160, "radius": 90},
+                {"id": "hamilton_straight", "type": "straight", "length": 400, "radius": 0},
+                {"id": "abbey", "type": "corner", "length": 100, "radius": 180, "dir": 1},
+                {"id": "farm", "type": "corner", "length": 80, "radius": 150, "dir": -1},
+                {"id": "village", "type": "corner", "length": 60, "radius": 40, "dir": 1},
+                {"id": "the_loop", "type": "corner", "length": 70, "radius": 35, "dir": -1},
+                {"id": "aintree", "type": "corner", "length": 90, "radius": 100, "dir": -1},
+                {"id": "wellington_straight", "type": "straight", "length": 700, "radius": 0},
+                {"id": "brooklands", "type": "corner", "length": 100, "radius": 60, "dir": -1},
+                {"id": "luffield", "type": "corner", "length": 150, "radius": 50, "dir": 1},
+                {"id": "woodcote", "type": "corner", "length": 100, "radius": 120, "dir": 1},
+                {"id": "national_straight", "type": "straight", "length": 300, "radius": 0},
+                {"id": "copse", "type": "corner", "length": 120, "radius": 150, "dir": 1},
+                {"id": "maggots", "type": "corner", "length": 80, "radius": 140, "dir": -1},
+                {"id": "becketts", "type": "corner", "length": 80, "radius": 110, "dir": 1},
+                {"id": "chapel", "type": "corner", "length": 70, "radius": 130, "dir": -1},
+                {"id": "hangar_straight", "type": "straight", "length": 750, "radius": 0},
+                {"id": "stowe", "type": "corner", "length": 110, "radius": 90, "dir": 1},
+                {"id": "vale", "type": "straight", "length": 150, "radius": 0},
+                {"id": "club", "type": "corner", "length": 120, "radius": 60, "dir": 1}
             ]
         },
         "spa": {
             "name": "Spa-Francorchamps",
             "length_km": 7.004,
             "segments": [
-                {"id": "s1", "type": "straight", "length": 1000, "radius": 0},
-                {"id": "s2", "type": "corner", "length": 300, "radius": 150},
-                {"id": "s3", "type": "straight", "length": 800, "radius": 0},
-                {"id": "s4", "type": "corner", "length": 400, "radius": 200},
-                {"id": "s5", "type": "straight", "length": 1200, "radius": 0},
-                {"id": "s6", "type": "corner", "length": 250, "radius": 100},
+                {"id": "la_source", "type": "corner", "length": 60, "radius": 25, "dir": 1},
+                {"id": "eau_rouge_appr", "type": "straight", "length": 400, "radius": 0},
+                {"id": "eau_rouge", "type": "corner", "length": 100, "radius": 150, "dir": -1},
+                {"id": "raidillon", "type": "corner", "length": 100, "radius": 140, "dir": 1},
+                {"id": "kemmel_straight", "type": "straight", "length": 1200, "radius": 0},
+                {"id": "les_combes_1", "type": "corner", "length": 60, "radius": 50, "dir": 1},
+                {"id": "les_combes_2", "type": "corner", "length": 60, "radius": 50, "dir": -1},
+                {"id": "bruxelles", "type": "corner", "length": 150, "radius": 60, "dir": 1},
+                {"id": "no_name", "type": "corner", "length": 80, "radius": 70, "dir": -1},
+                {"id": "pouhon", "type": "corner", "length": 250, "radius": 140, "dir": -1},
+                {"id": "campus_st", "type": "straight", "length": 200, "radius": 0},
+                {"id": "fagnes", "type": "corner", "length": 100, "radius": 80, "dir": 1},
+                {"id": "campus", "type": "corner", "length": 80, "radius": 75, "dir": 1},
+                {"id": "stavelot", "type": "corner", "length": 120, "radius": 100, "dir": 1},
+                {"id": "blanchimont_1", "type": "straight", "length": 500, "radius": 0},
+                {"id": "blanchimont_2", "type": "corner", "length": 200, "radius": 300, "dir": -1},
+                {"id": "bus_stop_1", "type": "corner", "length": 40, "radius": 30, "dir": 1},
+                {"id": "bus_stop_2", "type": "corner", "length": 40, "radius": 30, "dir": -1},
+                {"id": "start_finish", "type": "straight", "length": 300, "radius": 0}
             ]
         }
     }
@@ -265,16 +298,6 @@ class F1PhysicsEngine:
     def simulate_race(self, circuit_segments, strategy, weather="dry"):
         """
         Simulate a full race with pit strategy.
-        
-        strategy = {
-            "total_laps": 5,
-            "pit_stops": [
-                {"lap": 2, "tire": "hard"},
-                {"lap": 4, "tire": "medium"}
-            ],
-            "starting_tire": "soft",
-            "starting_fuel": 100
-        }
         """
         total_laps = strategy.get("total_laps", 1)
         pit_stops = {p["lap"]: p["tire"] for p in strategy.get("pit_stops", [])}
@@ -327,13 +350,11 @@ class F1PhysicsEngine:
     def calculate_optimal_line(self, circuit_segments):
         """
         Calculate apex points for optimal racing line.
-        Returns list of apex suggestions.
         """
         apexes = []
         for idx, segment in enumerate(circuit_segments):
             if segment.get("radius", 0) > 0:
                 radius = segment["radius"]
-                # Apex point is at the tightest part of the corner
                 apex_speed = self.calculate_cornering_speed(radius, 1.0)
                 
                 apexes.append({
@@ -350,10 +371,6 @@ class F1PhysicsEngine:
         """
         AI-based strategy recommendation.
         """
-        # Simple heuristic-based recommendation
-        avg_segment_length = np.mean([s.get("length", 100) for s in circuit_segments])
-        corner_count = sum(1 for s in circuit_segments if s.get("radius", 0) > 0)
-        
         if total_laps <= 3:
             return {
                 "recommendation": "Single stint",
@@ -381,7 +398,7 @@ class F1PhysicsEngine:
     
     @classmethod
     def generate_track_layout(cls, track_id):
-        """Generate 2D coordinates for track visualization."""
+        """Generate 2D coordinates for track visualization using explicit turn directions."""
         if track_id not in cls.TRACK_TEMPLATES:
             return []
             
@@ -406,19 +423,19 @@ class F1PhysicsEngine:
                 points.append({"x": x, "y": y})
             else:
                 # Corner
-                # Simplified approximation: arc made of small straight segments
                 arc_length = length
                 turn_angle = arc_length / radius # radians
                 
-                # Determine direction (alternate left/right for interest or hardcoded)
-                # For templates, we'll use a pseudo-random but deterministic direction based on ID
-                # or just alternate for simple closed loops
-                turn_direction = 1 if int(segment["id"][1:]) % 2 == 0 else -1
+                # Use explicit direction if available, else alternating default
+                # 1 = Right (Clockwise), -1 = Left (Counter-Clockwise) note: y increases downwards in HTML5 canvas usually,
+                # but standard trig y increases upwards. Canvas: y+ is down. 
+                # Angle 0 is Right (East). 
+                # Right turn -> Angle increases in standard math? No, Right turn -> Angle increases (clockwise) in Canvas coords (+y is down)
+                # Let's assume standard trig: x = cos, y = sin. Right turn decreases angle.
+                # BUT for screen coords where y is down: Right turn = Clockwise = Angle Increases.
                 
-                if track_id == "monaco":
-                    # Hardcoded directions for Monaco-ish shape
-                    idx = int(segment["id"][1:]) 
-                    turn_direction = 1 if idx in [2, 6, 10] else -1
+                # From segment data: "dir": 1 (Right), -1 (Left)
+                turn_direction = segment.get("dir", 1) 
                 
                 steps = 10
                 step_angle = (turn_angle * turn_direction) / steps
@@ -440,8 +457,12 @@ class F1PhysicsEngine:
         width = max_x - min_x
         height = max_y - min_y
         
-        scale_x = 700 / width if width > 0 else 1
-        scale_y = 500 / height if height > 0 else 1
+        # Safer bounds
+        if width == 0: width = 1
+        if height == 0: height = 1
+        
+        scale_x = 700 / width
+        scale_y = 500 / height
         final_scale = min(scale_x, scale_y) * 0.8
         
         offset_x = 400 - (min_x + width/2) * final_scale

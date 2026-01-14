@@ -121,6 +121,7 @@ header {
   color: var(--accent-primary);
   background: linear-gradient(135deg, var(--accent-primary) 0%, #ff8f00 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -1px;
   position: relative;

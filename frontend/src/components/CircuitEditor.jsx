@@ -1,4 +1,16 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
+import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
+import { GeometryEngine } from '../utils/GeometryEngine'
+
+// Fix for default marker icons in Leaflet with webpack/vite
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 // Generate smooth spline points with Catmull-Rom interpolation
 const getSplinePoints = (points, segments = 20, closed = false) => {
@@ -72,18 +84,19 @@ const getSplinePoints = (points, segments = 20, closed = false) => {
   return splinePoints;
 }
 
-const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulating, showRacingLine, ghostProgress }) => {
-  const canvasRef = useRef(null)
-  const [draggingPoint, setDraggingPoint] = useState(null)
-  const [hoveredPoint, setHoveredPoint] = useState(null)
-  const [carPosition, setCarPosition] = useState(null)
-  const [ghostPosition, setGhostPosition] = useState(null)
-  const smoothPointsRef = useRef([])
+// TrackOverlay Component handles the Canvas drawing synced with Leaflet Map
+const TrackOverlay = ({ points, setPoints, isComplete, raceProgress, isSimulating, showRacingLine, ghostProgress }) => {
+  const map = useMap();
+  const canvasRef = useRef(null);
+  const [draggingPoint, setDraggingPoint] = useState(null);
+  const [hoveredPoint, setHoveredPoint] = useState(null);
+  const [carPosition, setCarPosition] = useState(null);
+  const [ghostPosition, setGhostPosition] = useState(null);
+  const smoothPointsRef = useRef([]);
 
-  const SNAP_GRID = 24;
   const TRACK_WIDTH = 28;
 
-  // Update car positions during simulation
+  // Sync Car Positions
   useEffect(() => {
     if ((isSimulating || ghostProgress !== undefined) && smoothPointsRef.current.length > 0) {
       if (isSimulating) {
@@ -103,59 +116,59 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
     }
   }, [raceProgress, isSimulating, ghostProgress]);
 
-  // Drawing function
+  // Main Draw Function
   const draw = useCallback(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return;
+    const canvas = canvasRef.current;
+    if (!canvas || !map) return;
+
+    const ctx = canvas.getContext('2d');
     
-    const ctx = canvas.getContext('2d')
-    const rect = canvas.parentElement.getBoundingClientRect()
-    
-    // Handle HiDPI displays
+    // Get map dimensions
+    const size = map.getSize();
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    canvas.style.width = `${rect.width}px`;
-    canvas.style.height = `${rect.height}px`;
-    ctx.scale(dpr, dpr);
     
-    ctx.clearRect(0, 0, rect.width, rect.height)
-    
-    // Draw subtle grid
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
-    for (let x = 0; x < rect.width; x += SNAP_GRID) {
-      for (let y = 0; y < rect.height; y += SNAP_GRID) {
-        ctx.beginPath();
-        ctx.arc(x, y, 1, 0, Math.PI * 2);
-        ctx.fill();
-      }
+    // Resize canvas to match map
+    if (canvas.width !== size.x * dpr || canvas.height !== size.y * dpr) {
+      canvas.width = size.x * dpr;
+      canvas.height = size.y * dpr;
+      canvas.style.width = `${size.x}px`;
+      canvas.style.height = `${size.y}px`;
+      ctx.scale(dpr, dpr);
     }
 
-    // Draw Track
-    if (points.length > 1) {
+    ctx.clearRect(0, 0, size.x, size.y);
+
+    // Coordinate Conversion: Lat/Lon -> Container Points (Pixels)
+    const projectedPoints = points.map(p => {
+       if (p.lat !== undefined && p.lng !== undefined) {
+           return map.latLngToContainerPoint(p);
+       }
+       // Fallback for non-geo points (should be avoided in Real Mode)
+       return {x: p.x, y: p.y}; 
+    });
+
+    if (projectedPoints.length > 1) {
       const closed = isComplete;
-      const smoothPoints = getSplinePoints(points, 24, closed);
+      const smoothPoints = getSplinePoints(projectedPoints, 24, closed);
       smoothPointsRef.current = smoothPoints;
 
       if (smoothPoints.length > 1) {
-        // Draw track outer edge (asphalt)
+        // Draw track outer edge
         ctx.save();
         ctx.lineWidth = TRACK_WIDTH + 4;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.strokeStyle = '#050507'; // Match bg-deep
+        ctx.strokeStyle = '#050507'; 
         ctx.shadowBlur = 0;
         
         ctx.beginPath();
         ctx.moveTo(smoothPoints[0].x, smoothPoints[0].y);
-        for (let p of smoothPoints) {
-          ctx.lineTo(p.x, p.y);
-        }
+        for (let p of smoothPoints) ctx.lineTo(p.x, p.y);
         if (closed) ctx.closePath();
         ctx.stroke();
         ctx.restore();
 
-        // Draw track surface (dark gray)
+        // Draw track surface
         ctx.save();
         ctx.lineWidth = TRACK_WIDTH;
         ctx.lineCap = 'round';
@@ -164,27 +177,23 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
         
         ctx.beginPath();
         ctx.moveTo(smoothPoints[0].x, smoothPoints[0].y);
-        for (let p of smoothPoints) {
-          ctx.lineTo(p.x, p.y);
-        }
+        for (let p of smoothPoints) ctx.lineTo(p.x, p.y);
         if (closed) ctx.closePath();
         ctx.stroke();
         ctx.restore();
 
-        // Draw optimal racing line visual helper (yellow dashed)
+        // Racing Line
         if (showRacingLine) {
           ctx.save();
-          ctx.strokeStyle = 'rgba(255, 235, 59, 0.6)'; // Yellow line
+          ctx.strokeStyle = 'rgba(255, 235, 59, 0.6)';
           ctx.lineWidth = 4;
           ctx.setLineDash([10, 10]);
           ctx.shadowBlur = 10;
           ctx.shadowColor = '#ffee58';
           
           ctx.beginPath();
-          // Visual approximation: shift points inwards at corners
           for (let i = 0; i < smoothPoints.length; i++) {
              const p = smoothPoints[i];
-             // Simple shift for visual effect based on index
              const shift = (Math.sin(i * 0.1) * TRACK_WIDTH * 0.3); 
              if (i===0) ctx.moveTo(p.x + shift, p.y + shift);
              else ctx.lineTo(p.x + shift, p.y + shift);
@@ -194,7 +203,7 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
           ctx.restore();
         }
 
-        // Draw standard speed line (always visible)
+        // Speed Line
         for (let i = 1; i < smoothPoints.length; i++) {
           const p1 = smoothPoints[i-1];
           const p2 = smoothPoints[i];
@@ -204,7 +213,6 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
           ctx.lineTo(p2.x, p2.y);
           
           const speed = p2.speed || 1.0;
-          // Red (slow) -> Yellow -> Green -> Cyan (fast)
           const hue = Math.floor(speed * 180);
           const color = `hsl(${hue}, 100%, 50%)`;
           
@@ -215,60 +223,54 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
           ctx.stroke();
         }
 
-        // Draw white center line (dashed)
+        // Center dashed line
         ctx.save();
         ctx.setLineDash([10, 20]);
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
         ctx.lineWidth = 1;
-        ctx.shadowBlur = 0;
-        
         ctx.beginPath();
         ctx.moveTo(smoothPoints[0].x, smoothPoints[0].y);
-        for (let p of smoothPoints) {
-          ctx.lineTo(p.x, p.y);
-        }
+        for (let p of smoothPoints) ctx.lineTo(p.x, p.y);
         if (closed) ctx.closePath();
         ctx.stroke();
         ctx.restore();
       }
     }
 
-    // Draw Start/Finish line if circuit is complete
-    if (points.length >= 3 && isComplete) {
-      const startPoint = points[0];
-      const secondPoint = points[1];
-      const angle = Math.atan2(secondPoint.y - startPoint.y, secondPoint.x - startPoint.x);
-      const perpAngle = angle + Math.PI / 2;
-      
-      const lineLength = TRACK_WIDTH + 10;
-      const x1 = startPoint.x + Math.cos(perpAngle) * lineLength / 2;
-      const y1 = startPoint.y + Math.sin(perpAngle) * lineLength / 2;
-      const x2 = startPoint.x - Math.cos(perpAngle) * lineLength / 2;
-      const y2 = startPoint.y - Math.sin(perpAngle) * lineLength / 2;
-      
-      ctx.save();
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 4;
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = '#ffffff';
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-      ctx.restore();
+    // Draw Start/Finish
+    if (projectedPoints.length >= 3 && isComplete) {
+       const startPoint = projectedPoints[0];
+       const secondPoint = projectedPoints[1];
+       const angle = Math.atan2(secondPoint.y - startPoint.y, secondPoint.x - startPoint.x);
+       const perpAngle = angle + Math.PI / 2;
+       
+       const lineLength = TRACK_WIDTH + 10;
+       const x1 = startPoint.x + Math.cos(perpAngle) * lineLength / 2;
+       const y1 = startPoint.y + Math.sin(perpAngle) * lineLength / 2;
+       const x2 = startPoint.x - Math.cos(perpAngle) * lineLength / 2;
+       const y2 = startPoint.y - Math.sin(perpAngle) * lineLength / 2;
+       
+       ctx.save();
+       ctx.strokeStyle = '#ffffff';
+       ctx.lineWidth = 4;
+       ctx.shadowBlur = 10;
+       ctx.shadowColor = '#ffffff';
+       ctx.beginPath();
+       ctx.moveTo(x1, y1);
+       ctx.lineTo(x2, y2);
+       ctx.stroke();
+       ctx.restore();
     }
 
-    // Draw Control Points
-    points.forEach((p, i) => {
-      // Don't draw control points during simulation for cleaner look
+    // Control Points
+    projectedPoints.forEach((p, i) => {
       if (isSimulating || ghostProgress !== undefined) return;
       
       const isHovered = hoveredPoint === i || draggingPoint === i;
       const isStart = i === 0;
-      const isEnd = i === points.length - 1;
+      const isEnd = i === projectedPoints.length - 1;
       
       ctx.beginPath();
-      
       if (isHovered) {
         ctx.shadowBlur = 15;
         ctx.shadowColor = '#d4a853';
@@ -291,7 +293,6 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
       }
       ctx.fill();
       
-      // Inner dot
       ctx.beginPath();
       ctx.shadowBlur = 0;
       ctx.fillStyle = '#030308';
@@ -299,70 +300,60 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
       ctx.fill();
     });
 
-    // Draw Race Car
+    // Cars
     if (carPosition) {
-      ctx.save();
-      ctx.translate(carPosition.x, carPosition.y);
-      ctx.rotate(carPosition.angle || 0);
-      
-      // Car body
-      ctx.shadowBlur = 20;
-      ctx.shadowColor = '#e53935';
-      ctx.fillStyle = '#e53935';
-      
-      ctx.beginPath();
-      ctx.moveTo(15, 0);
-      ctx.lineTo(-10, -6);
-      ctx.lineTo(-12, -4);
-      ctx.lineTo(-12, 4);
-      ctx.lineTo(-10, 6);
-      ctx.closePath();
-      ctx.fill();
-      
-      // Front wing
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(10, -8, 3, 16);
-      
-      // Rear wing
-      ctx.fillRect(-14, -7, 2, 14);
-      
-      // Cockpit
-      ctx.fillStyle = '#000000';
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 5, 3, 0, 0, Math.PI * 2);
-      ctx.fill();
-      
-      ctx.restore();
+       ctx.save();
+       ctx.translate(carPosition.x, carPosition.y);
+       ctx.rotate(carPosition.angle || 0);
+       
+       // Car Shape
+       ctx.shadowBlur = 20;
+       ctx.shadowColor = '#e53935';
+       ctx.fillStyle = '#e53935';
+       ctx.beginPath();
+       ctx.moveTo(15, 0);
+       ctx.lineTo(-10, -6);
+       ctx.lineTo(-12, -4);
+       ctx.lineTo(-12, 4);
+       ctx.lineTo(-10, 6);
+       ctx.closePath();
+       ctx.fill();
+       
+       ctx.fillStyle = '#ffffff';
+       ctx.fillRect(10, -8, 3, 16);
+       ctx.fillRect(-14, -7, 2, 14);
+       
+       ctx.fillStyle = '#000000';
+       ctx.beginPath();
+       ctx.ellipse(0, 0, 5, 3, 0, 0, Math.PI * 2);
+       ctx.fill();
+       
+       ctx.restore();
     }
     
-    // Draw Ghost Car
     if (ghostPosition) {
-      ctx.save();
-      ctx.translate(ghostPosition.x, ghostPosition.y);
-      ctx.rotate(ghostPosition.angle || 0);
-      ctx.globalAlpha = 0.5;
-      
-      // Ghost body (Cyan)
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = '#00e5ff';
-      ctx.fillStyle = '#00e5ff';
-      
-      ctx.beginPath();
-      ctx.moveTo(15, 0);
-      ctx.lineTo(-10, -6);
-      ctx.lineTo(-12, -4);
-      ctx.lineTo(-12, 4);
-      ctx.lineTo(-10, 6);
-      ctx.closePath();
-      ctx.fill();
-      
-      ctx.restore();
+       ctx.save();
+       ctx.translate(ghostPosition.x, ghostPosition.y);
+       ctx.rotate(ghostPosition.angle || 0);
+       ctx.globalAlpha = 0.5;
+       ctx.shadowBlur = 15;
+       ctx.shadowColor = '#00e5ff';
+       ctx.fillStyle = '#00e5ff';
+       ctx.beginPath();
+       ctx.moveTo(15, 0);
+       ctx.lineTo(-10, -6);
+       ctx.lineTo(-12, -4);
+       ctx.lineTo(-12, 4);
+       ctx.lineTo(-10, 6);
+       ctx.closePath();
+       ctx.fill();
+       ctx.restore();
     }
 
-    // Draw hint to close circuit
-    if (points.length >= 3 && !isComplete && !isSimulating) {
-      const first = points[0];
-      const last = points[points.length - 1];
+    // Close Hint
+    if (projectedPoints.length >= 3 && !isComplete && !isSimulating) {
+      const first = projectedPoints[0];
+      const last = projectedPoints[projectedPoints.length - 1];
       const dist = Math.hypot(first.x - last.x, first.y - last.y);
       
       if (dist < 80) {
@@ -377,74 +368,101 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
         ctx.restore();
       }
     }
-    
-  }, [points, hoveredPoint, draggingPoint, isComplete, carPosition, ghostPosition, isSimulating, showRacingLine, ghostProgress]);
+
+  }, [points, hoveredPoint, draggingPoint, isComplete, carPosition, ghostPosition, isSimulating, showRacingLine, ghostProgress, map]);
+
+  // Hook into Map Events
+  useMapEvents({
+    move: () => {
+      draw();
+    },
+    zoom: () => {
+      draw();
+    },
+    mousemove: (e) => {
+       if (isSimulating || ghostProgress !== undefined) return;
+       
+       const containerPoint = map.latLngToContainerPoint(e.latlng);
+       const projectedPoints = points.map(p => {
+         if (p.lat !== undefined) return map.latLngToContainerPoint(p);
+         return {x: p.x, y: p.y};
+       });
+       
+       const hitIndex = projectedPoints.findIndex(p => Math.hypot(p.x - containerPoint.x, p.y - containerPoint.y) < 15);
+       setHoveredPoint(hitIndex !== -1 ? hitIndex : null);
+
+       if (draggingPoint !== null) {
+           L.DomEvent.disableClickPropagation(canvasRef.current);
+           const newPoints = [...points];
+           newPoints[draggingPoint] = e.latlng;
+           setPoints(newPoints);
+       }
+    },
+    mousedown: (e) => {
+        if (isSimulating || ghostProgress !== undefined) return;
+        
+        const containerPoint = map.latLngToContainerPoint(e.latlng);
+        const projectedPoints = points.map(p => {
+           if (p.lat !== undefined) return map.latLngToContainerPoint(p);
+           return {x: p.x, y: p.y};
+        });
+        
+        const hitIndex = projectedPoints.findIndex(p => Math.hypot(p.x - containerPoint.x, p.y - containerPoint.y) < 15);
+
+        if (hitIndex !== -1) {
+            setDraggingPoint(hitIndex);
+            map.dragging.disable();
+        } else {
+             setPoints([...points, e.latlng]);
+        }
+    },
+    mouseup: () => {
+        setDraggingPoint(null);
+        map.dragging.enable();
+    }
+  });
 
   useEffect(() => {
     draw();
-    
-    const handleResize = () => draw();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, [draw]);
-
-  const getMousePos = (e) => {
-    const rect = canvasRef.current.getBoundingClientRect()
-    return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    }
-  }
-
-  const handleMouseDown = (e) => {
-    if (isSimulating || ghostProgress !== undefined) return;
-    
-    const {x, y} = getMousePos(e)
-    const hitIndex = points.findIndex(p => Math.hypot(p.x - x, p.y - y) < 15);
-    
-    if (hitIndex !== -1) {
-      setDraggingPoint(hitIndex);
-    } else {
-      const snapX = Math.round(x / SNAP_GRID) * SNAP_GRID;
-      const snapY = Math.round(y / SNAP_GRID) * SNAP_GRID;
-      setPoints([...points, {x: snapX, y: snapY}]);
-    }
-  }
-  
-  const handleMouseMove = (e) => {
-    const {x, y} = getMousePos(e)
-    const snapX = Math.round(x / SNAP_GRID) * SNAP_GRID;
-    const snapY = Math.round(y / SNAP_GRID) * SNAP_GRID;
-
-    if (draggingPoint !== null && !isSimulating) {
-      const newPoints = [...points];
-      newPoints[draggingPoint] = {x: snapX, y: snapY};
-      setPoints(newPoints);
-      return;
-    }
-
-    const hitIndex = points.findIndex(p => Math.hypot(p.x - x, p.y - y) < 15);
-    setHoveredPoint(hitIndex !== -1 ? hitIndex : null);
-  }
-  
-  const handleMouseUp = () => {
-    setDraggingPoint(null);
-  }
 
   return (
     <canvas 
       ref={canvasRef}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={() => { setDraggingPoint(null); setHoveredPoint(null); }}
+      className="leaflet-overlay-pane pointer-events-none" 
       style={{ 
-        width: '100%', 
-        height: '100%', 
-        cursor: (isSimulating || ghostProgress !== undefined) ? 'default' : (draggingPoint !== null ? 'grabbing' : 'crosshair'), 
-        display: 'block' 
+        position: 'absolute', 
+        zIndex: 500, 
+        pointerEvents: 'none', 
       }}
     />
+  );
+}
+
+const CircuitEditor = (props) => {
+  const monacoCenter = [43.7347, 7.4206];
+  
+  return (
+    <div className="h-full w-full relative bg-gray-900 rounded-xl overflow-hidden border border-[var(--glass-border)] shadow-2xl">
+      <MapContainer 
+        center={monacoCenter} 
+        zoom={15} 
+        style={{ height: '100%', width: '100%' }}
+        className="z-0"
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" 
+        />
+        <TrackOverlay {...props} />
+      </MapContainer>
+      
+      <div className="absolute top-4 right-4 z-[1000] pointer-events-none">
+          <div className="glass-panel px-4 py-2 rounded-lg text-xs text-white/50">
+              REAL MODE ENABLED
+          </div>
+      </div>
+    </div>
   )
 }
 

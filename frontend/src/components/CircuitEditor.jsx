@@ -143,7 +143,7 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
         ctx.lineWidth = TRACK_WIDTH + 4;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.strokeStyle = '#1a1a24';
+        ctx.strokeStyle = '#050507'; // Match bg-deep
         ctx.shadowBlur = 0;
         
         ctx.beginPath();
@@ -160,7 +160,7 @@ const CircuitEditor = ({ points, setPoints, isComplete, raceProgress, isSimulati
         ctx.lineWidth = TRACK_WIDTH;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.strokeStyle = '#2a2a38';
+        ctx.strokeStyle = '#1a1a20';
         
         ctx.beginPath();
         ctx.moveTo(smoothPoints[0].x, smoothPoints[0].y);

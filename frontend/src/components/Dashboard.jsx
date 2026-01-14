@@ -268,7 +268,7 @@ const Dashboard = ({ data, formatTime }) => {
               const time = bestLap?.sector_times?.[i] || 0;
               
               return (
-                <div key={i} style={{ textAlign: 'center', padding: '1rem', background: 'rgba(0,0,0,0.3)', borderRadius: '8px' }}>
+                <div key={i} style={{ textAlign: 'center', padding: '1rem', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}>
                   <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>{name}</div>
                   <div style={{ fontSize: '1.5rem', fontWeight: '700', fontFamily: 'var(--font-mono)' }}>
                     {time.toFixed(3)}s

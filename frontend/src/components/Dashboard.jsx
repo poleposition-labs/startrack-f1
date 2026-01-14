@@ -63,17 +63,35 @@ const Dashboard = ({ data }) => {
             <div style={{display:'flex', gap:'1rem', width:'90%'}}>
                  <div className="panel" style={{flex:1}}>
                      <h4>Tire Wear</h4>
-                     <div style={{height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius:'3px', marginTop:'1rem'}}>
-                         <div style={{width: '85%', height:'100%', background: 'var(--accent-green)', borderRadius:'3px', boxShadow: '0 0 10px var(--accent-green)'}}></div>
+                     <div style={{height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius:'3px', marginTop:'1rem', overflow:'hidden'}}>
+                         <div style={{
+                             width: `${telemetry ? telemetry[telemetry.length-1].tire_life : 100}%`, 
+                             height:'100%', 
+                             background: 'var(--accent-green)', 
+                             borderRadius:'3px', 
+                             boxShadow: '0 0 10px var(--accent-green)',
+                             transition: 'width 0.5s ease'
+                             }}></div>
                      </div>
-                     <small style={{color:'var(--text-secondary)'}}>Soft C5 - 85% Life</small>
+                     <small style={{color:'var(--text-secondary)'}}>
+                         {telemetry ? `${Math.round(telemetry[telemetry.length-1].tire_life)}%` : '100%'} Life - Soft C5
+                     </small>
                  </div>
                  <div className="panel" style={{flex:1}}>
-                     <h4>Fuel Load</h4>
-                     <div style={{height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius:'3px', marginTop:'1rem'}}>
-                         <div style={{width: '40%', height:'100%', background: 'var(--accent-red)', borderRadius:'3px', boxShadow: '0 0 10px var(--accent-red)'}}></div>
+                     <h4>ERS Battery</h4>
+                     <div style={{height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius:'3px', marginTop:'1rem', overflow:'hidden'}}>
+                         <div style={{
+                             width: `${telemetry ? (telemetry[telemetry.length-1].battery / 4.0) * 100 : 100}%`, 
+                             height:'100%', 
+                             background: 'linear-gradient(90deg, #ff3b3b, #00ff88)', 
+                             borderRadius:'3px', 
+                             boxShadow: '0 0 10px rgba(0,255,136,0.3)',
+                             transition: 'width 0.2s ease'
+                             }}></div>
                      </div>
-                     <small style={{color:'var(--text-secondary)'}}>42kg Remaining</small>
+                     <small style={{color:'var(--text-secondary)'}}>
+                          {telemetry ? `${telemetry[telemetry.length-1].battery} MJ` : '4.0 MJ'} / 4.0 MJ
+                     </small>
                  </div>
             </div>
         </div>

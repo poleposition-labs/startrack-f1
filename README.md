@@ -1,7 +1,12 @@
 # <div align="center">StarTrack F1</div>
 
 <div align="center">
+  <img src="frontend/public/assets/logo.png" alt="StarTrack Logo" width="120"/>
+  <br/>
   <h3>Advanced Motorsport Analytics & Circuit Design Engine</h3>
+  <br/>
+  <img src="frontend/public/assets/banner.png" alt="StarTrack Banner" width="100%" style="border-radius: 8px; box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);"/>
+  <br/>
   <p>An open-source, physics-driven Formula 1 simulation platform for track design, strategy modeling, and telemetry analysis.</p>
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

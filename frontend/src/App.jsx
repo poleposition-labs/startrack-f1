@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import CircuitEditor from './components/CircuitEditor'
 import Dashboard from './components/Dashboard'
+import { GeometryEngine } from './utils/GeometryEngine'
 import './App.css'
 
 // Audio Context for engine sounds
@@ -61,13 +62,20 @@ function App() {
       .catch(err => console.log('Backend not available'));
   }, []);
 
-  // Check if circuit is closed
+  // Check if circuit is closed (adaptive for Meters or Lat/Lon)
   const checkCircuitComplete = useCallback((points) => {
     if (points.length < 3) return false;
     const first = points[0];
     const last = points[points.length - 1];
-    const dist = Math.hypot(first.x - last.x, first.y - last.y);
-    return dist < 30;
+    
+    // Check if using Lat/Lon (has lat property)
+    if (first.lat !== undefined) {
+        const dist = GeometryEngine.getDistanceMeters(first.lat, first.lng, last.lat, last.lng);
+        return dist < 40; // Increased tolerance for GPS points
+    } else {
+        const dist = Math.hypot(first.x - last.x, first.y - last.y);
+        return dist < 30; // 30 pixels (approx)
+    }
   }, []);
 
   // Update points and check completion
@@ -121,7 +129,7 @@ function App() {
     speechSynthesis.speak(utterance);
   }, [audioEnabled]);
 
-  // Calculate radius helper
+  // Calculate radius helper (using XY meters)
   const calculateRadius = (p1, p2, p3) => {
     const x1 = p1.x, y1 = p1.y;
     const x2 = p2.x, y2 = p2.y;
@@ -137,21 +145,44 @@ function App() {
     return Math.min(R, 1000);
   }
 
-  // Build segments from points
+  // Build segments from points (Handles both Lat/Lon and X/Y)
   const buildSegments = useCallback(() => {
+    if (circuitPoints.length < 2) return [];
+
+    let meterPoints = [];
+    
+    // Check if points are Lat/Lon
+    if (circuitPoints[0].lat !== undefined) {
+        const origin = circuitPoints[0];
+        meterPoints = circuitPoints.map(p => 
+            GeometryEngine.latLonToMeters(p.lat, p.lng, origin.lat, origin.lng)
+        );
+    } else {
+        // Assume points are already generic units (e.g. from JSON import or simple mode)
+        meterPoints = circuitPoints; 
+    }
+
     const segments = [];
-    for(let i=1; i < circuitPoints.length; i++) {
-      const pPrev = circuitPoints[i-1];
-      const pCurr = circuitPoints[i];
+    for(let i=1; i < meterPoints.length; i++) {
+      const pPrev = meterPoints[i-1];
+      const pCurr = meterPoints[i];
+      
       const dist = Math.hypot(pCurr.x - pPrev.x, pCurr.y - pPrev.y);
-      const radius = calculateRadius(circuitPoints[Math.max(0, i-2)], pPrev, pCurr);
+      
+      // Calculate radius using 3 points (prev-1, prev, curr)
+      const radius = calculateRadius(
+          meterPoints[Math.max(0, i-2)], 
+          pPrev, 
+          pCurr
+      );
+      
       const isCorner = radius > 0 && radius < 500;
       
       segments.push({
         id: `seg-${i}`,
         type: isCorner ? 'corner' : 'straight',
-        length: dist * 5,
-        radius: isCorner ? radius * 5 : 0
+        length: dist, // Now real meters
+        radius: isCorner ? radius : 0
       });
     }
     return segments;
@@ -189,7 +220,7 @@ function App() {
   // Run Race Simulation
   const runSimulation = async () => {
     if (circuitPoints.length < 3 || !isCircuitComplete) {
-      alert("Lütfen kapalı bir pist çizin!");
+      alert("Please close the circuit first!");
       return;
     }
 
@@ -265,7 +296,7 @@ function App() {
       console.error(err);
       setIsSimulating(false);
       stopEngineSound();
-      alert("Simülasyon başarısız. Backend çalışıyor mu?");
+      alert("Simulation failed. Is backend running?");
     }
   };
 
@@ -399,7 +430,7 @@ function App() {
         if (template && template.preview_points) {
            setCircuitPoints(template.preview_points);
         } else {
-           // Fallback to circle
+           // Fallback to circle if no preview points
             const points = [];
             let x = 200, y = 200;
             data.segments.forEach((seg, i) => {
@@ -802,45 +833,34 @@ function App() {
           )}
           
           {activeTab === 'leaderboard' && (
-            <div className="leaderboard-view">
-              <h2>🏆 Leaderboard</h2>
-              <table className="leaderboard-table">
-                <thead>
-                  <tr>
-                    <th>Rank</th>
-                    <th>Track</th>
-                    <th>Time</th>
-                    <th>Laps</th>
-                    <th>Tire</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaderboard.length === 0 ? (
-                    <tr><td colSpan="5" style={{ textAlign: 'center', opacity: 0.5 }}>No records yet</td></tr>
-                  ) : (
-                    leaderboard.map((entry, i) => (
-                      <tr key={i} className={i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : ''}>
-                        <td>{i + 1}</td>
-                        <td>{entry.name}</td>
-                        <td>{formatTime(entry.time)}</td>
-                        <td>{entry.laps}</td>
-                        <td>{entry.tire}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+             <div className="leaderboard-view">
+                <h2>🏆 Fastest Laps</h2>
+                <div className="leaderboard-grid">
+                   <div className="leaderboard-header">
+                      <span>Rank</span>
+                      <span>Circuit</span>
+                      <span>Time</span>
+                      <span>Laps</span>
+                      <span>Date</span>
+                   </div>
+                   {leaderboard.length === 0 ? (
+                      <div className="leaderboard-empty">No records yet. Start racing!</div>
+                   ) : (
+                      leaderboard.map((entry, i) => (
+                         <div key={i} className={`leaderboard-row ${i===0?'gold':''} ${i===1?'silver':''} ${i===2?'bronze':''}`}>
+                            <span className="rank">{i+1}</span>
+                            <span>{entry.name}</span>
+                            <span className="time">{formatTime(entry.time)}</span>
+                            <span>{entry.laps}</span>
+                            <span className="date">{new Date(entry.date).toLocaleDateString()}</span>
+                         </div>
+                      ))
+                   )}
+                </div>
+             </div>
           )}
         </div>
       </main>
-
-      <footer>
-        <p className="disclaimer">
-          StarTrack F1 is an independent open-source project and is not affiliated with, 
-          endorsed by, or connected to Formula 1, Formula One Management, or the FIA.
-        </p>
-      </footer>
     </div>
   )
 }

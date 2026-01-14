@@ -88,20 +88,21 @@ class F1PhysicsEngine:
     # Static coordinates for accurate visualization (Normalized 0-800, 0-600)
     TRACK_COORDINATES = {
         "monaco": [
-           {"x": 100, "y": 500}, {"x": 150, "y": 480}, {"x": 200, "y": 450}, # St Devote
-           {"x": 250, "y": 400}, {"x": 300, "y": 350}, {"x": 320, "y": 340}, # Massenet
-           {"x": 340, "y": 350}, {"x": 350, "y": 380}, # Casino
-           {"x": 360, "y": 420}, {"x": 350, "y": 450}, # Mirabeau
-           {"x": 340, "y": 460}, {"x": 330, "y": 450}, # Hairpin entry
-           {"x": 325, "y": 445}, {"x": 335, "y": 440}, # Hairpin exit
-           {"x": 360, "y": 450}, {"x": 380, "y": 460}, # Portier
-           {"x": 450, "y": 470}, {"x": 550, "y": 480}, # Tunnel
-           {"x": 580, "y": 485}, {"x": 570, "y": 470}, # Chicane
-           {"x": 560, "y": 460}, {"x": 500, "y": 450}, # Tabac
-           {"x": 480, "y": 440}, {"x": 460, "y": 430}, # Pool 1
-           {"x": 440, "y": 440}, {"x": 420, "y": 450}, # Pool 2
-           {"x": 300, "y": 450}, {"x": 250, "y": 480}, # Rascasse
-           {"x": 200, "y": 500}, {"x": 100, "y": 500}  # Finish
+           {"lat": 43.7347, "lng": 7.4206}, # Start/Finish
+           {"lat": 43.7355, "lng": 7.4210}, 
+           {"lat": 43.7375, "lng": 7.4215}, # Ste Devote
+           {"lat": 43.7385, "lng": 7.4230}, # Beau Rivage
+           {"lat": 43.7395, "lng": 7.4275}, # Massenet/Casino
+           {"lat": 43.7400, "lng": 7.4290}, # Mirabeau
+           {"lat": 43.7405, "lng": 7.4300}, # Hairpin
+           {"lat": 43.7400, "lng": 7.4305},
+           {"lat": 43.7390, "lng": 7.4310}, # Portier
+           {"lat": 43.7370, "lng": 7.4330}, # Tunnel
+           {"lat": 43.7350, "lng": 7.4290}, # Chicane
+           {"lat": 43.7345, "lng": 7.4270}, # Tabac
+           {"lat": 43.7335, "lng": 7.4250}, # Pool
+           {"lat": 43.7340, "lng": 7.4220}, # Rascasse
+           {"lat": 43.7347, "lng": 7.4206}  # Finish
         ],
         "silverstone": [
             {"x": 350, "y": 500}, {"x": 450, "y": 500}, # Hamilton Straight
